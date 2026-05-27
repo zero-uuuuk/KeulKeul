@@ -8,8 +8,8 @@
 ## 0. 사전 준비
 
 - AWS 계정 및 IAM 권한 (EC2, ALB, ASG, CloudWatch)
-- 제공된 웹 서버 코드: https://github.com/zero-uuuuk/KeulKeul/tree/feat/week1/assignment/week1-auto-scaling-load-balancer/app.py
-- 제공된 부하 테스트 스크립트 (Python): https://github.com/zero-uuuuk/KeulKeul/tree/feat/week1/assignment/week1-auto-scaling-load-balancer/load_test.py
+- 제공된 웹 서버 코드: https://github.com/zero-uuuuk/KeulKeul/tree/main/assignment/week1-auto-scaling-load-balancer/app.py
+- 제공된 부하 테스트 스크립트 (Python): https://github.com/zero-uuuuk/KeulKeul/tree/main/assignment/week1-auto-scaling-load-balancer/load_test.py
 
 ## 1. 인프라 구성 (AWS 콘솔)
 
@@ -42,7 +42,7 @@
     
     # 실습 repository와 웹 서버가 위치한 디렉토리를 정의한다.
     REPO_URL=https://github.com/zero-uuuuk/KeulKeul.git
-    REPO_BRANCH=feat/week1
+    REPO_BRANCH=main
     REPO_DIR=/home/ubuntu/KeulKeul
     APP_DIR=$REPO_DIR/assignment/week1-auto-scaling-load-balancer
     
