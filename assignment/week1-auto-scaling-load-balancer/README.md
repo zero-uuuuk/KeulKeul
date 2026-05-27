@@ -5,6 +5,15 @@
   Python 표준 라이브러리만 사용하며, 별도 웹 프레임워크 설치 없이 실행할 수 있습니다.
 </p>
 
+## 파일 구성
+
+```text
+.
+├── app.py        # EC2에서 실행되는 웹 서버 코드
+├── load_test.py  # 로컬 터미널에서 실행하는 부하 테스트 스크립트
+└── README.md     # 실행 방법과 파일 설명
+```
+
 ## 동작 방식
 
 - `GET /health`
@@ -23,14 +32,6 @@ EC2에서는 기본 포트가 `80`이므로 아래처럼 실행합니다.
 
 ```bash
 python3 app.py
-```
-
-Launch Template의 User data 예시:
-
-```bash
-#!/bin/bash
-cd /home/ubuntu/app
-nohup python3 app.py > app.log 2>&1 &
 ```
 
 ## 부하 테스트 실행

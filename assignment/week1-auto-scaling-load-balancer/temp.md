@@ -2,6 +2,9 @@
 
 간단한 HTTP 서버를 ALB + ASG로 띄우고, 부하 테스트로 Auto Scaling이 실제로 동작하는 걸 시각화한다.
 
+> [!NOTE]
+> 별도 언급이 없는 설정은 AWS 콘솔의 기본값을 그대로 사용한다.
+
 ## 0. 사전 준비
 
 - AWS 계정 및 IAM 권한 (EC2, ALB, ASG, CloudWatch)
@@ -12,16 +15,17 @@
 
 아래 순서대로 구성한다. 순서를 지키지 않으면 연결이 안 되는 경우가 많다.
 
-### 1-1. AMI 준비 (EC2 → Instances)
+### 1-1. AMI 준비 (EC2 → 인스턴스)
 
 웹 서버가 설치된 EC2 인스턴스를 만들고 AMI로 저장한다. 이후 ASG가 이 AMI로 서버를 찍어낸다.
 
-1. EC2 콘솔 → **Launch Instance**
-    - AMI: Ubuntu Server 22.04 LTS
+1. EC2 콘솔 → **인스턴스 시작**
+    - AMI: Ubuntu Server 26.04 LTS
     - 인스턴스 타입: `t3.micro`
     - 키페어: 기존 키페어 선택 또는 새로 생성
+    - 로컬 터미널에서 `.pem` 키 권한을 `chmod 400 {KEY_FILE}.pem`으로 설정
     - 보안 그룹: 인바운드 HTTP(80), SSH(22)를 **내 IP에서만** 허용
-    - **Advanced details** → **User data**:
+    - **고급 세부 정보** → **사용자 데이터**:
     
     ```bash
     #!/bin/bash
@@ -44,10 +48,10 @@
     
     # 80번 포트로 웹 서버를 백그라운드 실행하고 로그를 파일에 남긴다.
     cd "$APP_DIR"
-    nohup python3 app.py > app.log 2>&1 &
+    nohup python3 -u app.py > app.log 2>&1 &
     ```
     
-    - User data 실행 전, `app.py`가 GitHub repository에 push되어 있어야 한다.
+    - 사용자 데이터 실행 전, `app.py`가 GitHub repository에 push되어 있어야 한다.
     
 2. 로컬 터미널에서 EC2 Public IPv4 주소로 웹 서버 응답 확인
     
@@ -56,60 +60,60 @@
     curl http://{EC2_PUBLIC_IP}/
     ```
     
-3. 인스턴스 선택 → **Actions → Image and templates → Create image**
-    - Image name 입력 후 생성
+3. EC2 콘솔 → 인스턴스 선택 → **작업 → 이미지 및 템플릿 → 이미지 생성**
+    - 이미지 이름 입력 후 생성
     - EC2 콘솔 → AMIs에서 `available` 상태가 될 때까지 대기
 
-### 1-2. Target Group 생성 (EC2 → Target Groups)
+### 1-2. 대상 그룹 생성 (EC2 → 로드 밸런싱 → 대상 그룹)
 
 ALB가 트래픽을 보낼 대상 그룹. 헬스 체크 설정이 여기에 있다.
 
-1. **Create target group** 클릭
+1. **대상 그룹 생성** 클릭
 2. 설정값:
-    - Target type: `Instances`
+    - 대상 유형: `인스턴스`
     - Protocol: `HTTP`, Port: `80` (웹 서버 포트에 맞게)
-    - VPC: 사용할 VPC 선택
-3. **Health checks** 설정:
+3. **상태 확인** 설정:
     - Health check protocol: `HTTP`
     - Health check path: `/health`
-    - **Advanced health check settings** 펼치기:
-        - Healthy threshold: `2`
-        - Unhealthy threshold: `2`
-        - Timeout: `5`초
-        - Interval: `30`초
-        - Success codes: `200`
-4. **Next** → 인스턴스 등록 없이 **Create target group**
+    - **고급 상태 확인 설정** 펼치기:
+        - 정상 임계값: `2`
+        - 비정상 임계값: `2`
+        - 제한 시간: `5`초
+        - 간격: `30`초
+        - 성공 코드: `200`
+4. **다음** → 인스턴스 등록 없이 **대상 그룹 생성**
 
-### 1-3. ALB 생성 (EC2 → Load Balancers)
+### 1-3. ALB 생성 (EC2 → 로드 밸런서)
 
-1. **Create load balancer** → **Application Load Balancer** 선택
+1. **로드 밸런서 생성** → **애플리케이션 로드 밸런서** 선택
 2. 기본 설정:
-    - Name: 적절한 이름 입력
-    - Scheme: `Internet-facing`
+    - 이름: 적절한 이름 입력
+    - 체계: `Internet-facing`
     - IP address type: `IPv4`
-3. Network mapping:
-    - VPC 선택
-    - **Availability Zones**: 최소 2개의 AZ 선택, 각각 퍼블릭 서브넷 지정
-4. Security groups:
-    - 인바운드 HTTP(80) 허용하는 보안 그룹 선택 또는 생성
-5. Listeners and routing:
+3. 네트워크 매핑:
+    - **가용 영역**: 최소 2개의 AZ 선택, 각각 퍼블릭 서브넷 지정
+4. 보안 그룹:
+    - ALB용 보안 그룹 새로 생성
+    - 인바운드 HTTP(80)를 내 IP에서만 허용
+5. 리스너 및 라우팅:
     - Protocol: `HTTP`, Port: `80`
-    - Default action: 1-2에서 만든 Target Group 선택
-6. **Create load balancer**
-7. 생성 완료 후 ALB의 **DNS name** 복사해두기 (부하 테스트에 사용)
+    - 기본 작업: 1-2에서 만든 대상 그룹 선택
+6. **로드 밸런서 생성**
+7. 생성 완료 후 ALB의 **DNS 이름** 복사해두기 (부하 테스트에 사용)
 
-### 1-4. Launch Template 생성 (EC2 → Launch Templates)
+### 1-4. 시작 템플릿 생성 (EC2 → 시작 템플릿)
 
 ASG가 새 서버를 띄울 때 사용할 템플릿.
 
-1. **Create launch template** 클릭
+1. **시작 템플릿 생성** 클릭
 2. 설정값:
-    - Launch template name: 적절한 이름 입력
-    - **My AMIs** → 1-1에서 만든 AMI 선택
-    - Instance type: `t3.micro`
-    - Key pair: 기존 키페어 선택
-    - Security groups: EC2용 보안 그룹 선택 (인바운드: ALB 보안 그룹에서 오는 HTTP 허용)
-3. **Advanced details** → User data:
+    - 시작 템플릿 이름: 적절한 이름 입력
+    - **내 AMI** → 1-1에서 만든 AMI 선택
+    - 인스턴스 유형: `t3.micro`
+    - 키 페어: 기존 키페어 선택
+    - 보안 그룹: 1-1에서 만든 EC2용 보안 그룹 재사용
+    - 해당 보안 그룹의 인바운드 규칙에 ALB 보안 그룹에서 오는 HTTP(80)를 추가
+3. **고급 세부 정보** → **사용자 데이터**:
     - 웹 서버를 자동으로 실행하는 스크립트 입력
     
     ```bash
@@ -121,42 +125,41 @@ ASG가 새 서버를 띄울 때 사용할 템플릿.
     cd "$APP_DIR"
     
     # ASG가 새 인스턴스를 띄울 때마다 80번 포트로 웹 서버를 백그라운드 실행한다.
-    nohup python3 app.py > app.log 2>&1 &
+    nohup python3 -u app.py > app.log 2>&1 &
     ```
     
-4. **Create launch template**
+4. **시작 템플릿 생성**
 
-### 1-5. Auto Scaling Group 생성 (EC2 → Auto Scaling Groups)
+### 1-5. Auto Scaling 그룹 생성 (EC2 → Auto Scaling 그룹)
 
-1. **Create Auto Scaling group** 클릭
-2. **Step 1 - Choose launch template**:
-    - Name: 적절한 이름 입력
-    - Launch template: 1-4에서 만든 템플릿 선택
-3. **Step 2 - Choose instance launch options**:
-    - VPC 선택
-    - Availability Zones: 최소 2개 AZ의 퍼블릭 서브넷 선택
-4. **Step 3 - Configure advanced options**:
-    - Load balancing: **Attach to an existing load balancer** 선택
-    - Target groups: 1-2에서 만든 Target Group 선택
-    - Health checks: **Turn on Elastic Load Balancing health checks** 체크
-    - Health check grace period: `120`초
-5. **Step 4 - Configure group size and scaling**:
-    - Desired capacity: `2`
-    - Minimum capacity: `2`
-    - Maximum capacity: `5`
-    - Automatic scaling: **Target tracking scaling policy** 선택
-        - Scaling policy name: 적절한 이름 입력
-        - Metric type: `Average CPU Utilization`
-        - Target value: `50`
-        - Instance warmup: `300`초
-6. **Step 5, 6**: 기본값 유지
-7. **Create Auto Scaling group**
+1. **Auto Scaling 그룹 생성** 클릭
+2. **1단계 - 시작 템플릿 선택**:
+    - 이름: 적절한 이름 입력
+    - 시작 템플릿: 1-4에서 만든 템플릿 선택
+3. **2단계 - 인스턴스 시작 옵션 선택**:
+    - 가용 영역: 최소 2개 AZ의 퍼블릭 서브넷 선택
+4. **3단계 - 고급 옵션 구성**:
+    - 로드 밸런싱: **기존 로드 밸런서에 연결** 선택
+    - 대상 그룹: 1-2에서 만든 대상 그룹 선택
+    - 상태 확인: **Elastic Load Balancing 상태 확인 켜기** 체크
+    - 상태 확인 유예 기간: `120`초
+5. **4단계 - 그룹 크기 및 조정 구성**:
+    - 희망 용량: `2`
+    - 최소 용량: `2`
+    - 최대 용량: `5`
+    - 자동 조정: **대상 추적 크기 조정 정책** 선택
+        - 크기 조정 정책 이름: 적절한 이름 입력
+        - 지표 유형: `평균 CPU 사용률`
+        - 대상 값: `50`
+        - 인스턴스 워밍업: `300`초
+6. **5, 6단계**: 기본값 유지
+7. **Auto Scaling 그룹 생성**
 
 구성 완료 후 확인할 것:
 
-- ASG 콘솔 → **Instance management** 탭에서 인스턴스 2대가 `InService` 상태인지 확인
-- EC2 콘솔 → **Target Groups** → 해당 Target Group → **Targets** 탭에서 2대가 `healthy` 상태인지 확인 (최대 2분 소요)
-- 브라우저 또는 터미널에서 ALB DNS로 응답 확인:
+- ASG 콘솔 → **인스턴스 관리** 탭에서 인스턴스 2대가 `InService` 상태인지 확인
+- EC2 콘솔 → **로드 밸런싱** → **대상 그룹** → 해당 대상 그룹 → **대상** 탭에서 2대가 `healthy` 상태인지 확인 (최대 2분 소요)
+- 로컬 브라우저 또는 로컬 터미널에서 ALB DNS로 응답 확인:
     
     ```bash
     curl http://{ALB_DNS}/# Hello from {hostname} 응답 확인
@@ -165,7 +168,7 @@ ASG가 새 서버를 띄울 때 사용할 템플릿.
 
 ## 2. 부하 테스트
 
-제공된 Python 스크립트를 실행한다. `ALB_DNS`를 실제 ALB 주소로 교체한다.
+로컬 터미널에서 제공된 Python 스크립트를 실행한다. `ALB_DNS`를 실제 ALB 주소로 교체한다.
 
 ```bash
 python3 load_test.py --host http://{ALB_DNS}
@@ -192,7 +195,7 @@ python3 load_test.py --host http://{ALB_DNS}
 
 ### 3-1. ASG 지표 확인
 
-CloudWatch 콘솔 → **Metrics** → **Auto Scaling** → 해당 ASG 선택
+CloudWatch 콘솔 → **지표** → **Auto Scaling** → 해당 ASG 선택
 
 아래 두 지표를 같은 그래프에 추가한다.
 
@@ -213,7 +216,7 @@ CloudWatch 콘솔 → **Metrics** → **Auto Scaling** → 해당 ASG 선택
 
 ### 3-2. ALB 지표 확인
 
-CloudWatch 콘솔 → **Metrics** → **ApplicationELB** → 해당 ALB 선택
+CloudWatch 콘솔 → **지표** → **ApplicationELB** → 해당 ALB 선택
 
 아래 지표를 확인한다.
 
@@ -244,16 +247,45 @@ CloudWatch 콘솔 → **Metrics** → **ApplicationELB** → 해당 ALB 선택
 
 ## 4. 제출물
 
-1. **인프라 구성 완료 스크린샷** — Target Group의 Targets 탭에서 인스턴스 2대가 `healthy` 상태인 화면
+1. **인프라 구성 완료 스크린샷** — 대상 그룹의 대상 탭에서 인스턴스 2대가 `healthy` 상태인 화면
 2. **CloudWatch 스크린샷** — 3번 기준을 충족하는 캡처 1장 이상
 
 ## 5. 주의사항
 
-과제 완료 후 반드시 아래 순서로 리소스를 삭제한다. 방치하면 비용이 계속 발생한다.
+과제 완료 후 반드시 아래 순서로 리소스를 삭제한다. 방치하면 EC2, ALB, EBS snapshot 비용이 계속 발생할 수 있다.
 
-1. **ASG 삭제** — ASG 콘솔 → 해당 ASG 선택 → Delete
-2. **ALB 삭제** — Load Balancers → 해당 ALB 선택 → Delete
-3. **Target Group 삭제** — Target Groups → 해당 TG 선택 → Delete
-4. **Launch Template 삭제** — Launch Templates → 해당 템플릿 선택 → Delete
-5. **AMI 등록 취소 및 스냅샷 삭제** — AMIs → Deregister → 연결된 Snapshot도 삭제
-6. **EC2 인스턴스 종료** — Instances → Terminate
+> [!IMPORTANT]
+> ASG를 먼저 삭제해야 한다. ASG가 남아 있으면 EC2 인스턴스를 종료해도 희망 용량을 맞추기 위해 새 인스턴스를 다시 생성할 수 있다.
+
+1. **ASG 삭제**
+    - EC2 콘솔 → **Auto Scaling 그룹**으로 이동한다.
+    - 실습에서 만든 ASG를 선택하고 **삭제**를 클릭한다.
+    - 삭제 확인 창이 나오면 안내에 따라 확인 문구를 입력한다.
+    - 삭제 후 EC2 인스턴스 목록에서 ASG가 만든 인스턴스가 종료되는지 확인한다.
+
+2. **ALB 삭제**
+    - EC2 콘솔 → **로드 밸런싱** → **로드 밸런서**로 이동한다.
+    - 실습에서 만든 ALB를 선택하고 **작업 → 로드 밸런서 삭제**를 클릭한다.
+    - 삭제가 완료될 때까지 기다린다.
+
+3. **대상 그룹 삭제**
+    - EC2 콘솔 → **로드 밸런싱** → **대상 그룹**으로 이동한다.
+    - 실습에서 만든 대상 그룹을 선택하고 **작업 → 삭제**를 클릭한다.
+    - ALB가 아직 연결되어 있으면 삭제되지 않으므로, ALB 삭제 완료 후 진행한다.
+
+4. **시작 템플릿 삭제**
+    - EC2 콘솔 → **시작 템플릿**으로 이동한다.
+    - 실습에서 만든 시작 템플릿을 선택하고 **작업 → 템플릿 삭제**를 클릭한다.
+    - 시작 템플릿은 비용이 직접 발생하지는 않지만, 실습 리소스 정리를 위해 삭제한다.
+
+5. **AMI 등록 취소 및 snapshot 삭제**
+    - EC2 콘솔 → **AMI**로 이동한다.
+    - 1-1에서 만든 AMI를 선택하고 **작업 → AMI 등록 취소**를 클릭한다.
+    - AMI 등록 취소 후, 연결된 EBS snapshot ID를 확인한다.
+    - EC2 콘솔 → **스냅샷**으로 이동해 해당 snapshot을 선택하고 **작업 → 스냅샷 삭제**를 클릭한다.
+    - snapshot은 AMI를 등록 취소해도 자동 삭제되지 않으므로 반드시 별도로 삭제한다.
+
+6. **남은 EC2 인스턴스와 EBS 볼륨 확인**
+    - EC2 콘솔 → **인스턴스**에서 실습용 인스턴스가 남아 있으면 **인스턴스 상태 → 인스턴스 종료**를 클릭한다.
+    - EC2 콘솔 → **볼륨**에서 실습용 EBS 볼륨이 남아 있지 않은지 확인한다.
+    - 인스턴스 생성 시 `Delete on termination`이 켜져 있지 않았다면 볼륨이 남을 수 있으므로 확인한다.

@@ -108,7 +108,7 @@ class AutoScalingDemoHandler(BaseHTTPRequestHandler):
 
         # 표준 출력 기반 로그는 User data의 nohup 실행 환경에서도 확인하기 쉽다.
         now_text = time.strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[{now_text}] {self.client_address[0]} - {format_text % args}")
+        print(f"[{now_text}] {self.client_address[0]} - {format_text % args}", flush=True)
 
     def _build_root_response(self, cpu_result: dict[str, int | float]) -> dict[str, object]:
         """루트 요청에 반환할 인스턴스 식별 정보와 CPU 작업 결과를 생성한다."""
@@ -165,7 +165,7 @@ def run_server() -> None:
 
     # SIGTERM/SIGINT를 받으면 serve_forever 루프를 빠져나와 소켓을 정리한다.
     def request_shutdown(_signum: int, _frame: object) -> None:
-        print("서버 종료 요청을 받았습니다.")
+        print("서버 종료 요청을 받았습니다.", flush=True)
         threading.Thread(target=server.shutdown, daemon=True).start()
 
     signal.signal(signal.SIGTERM, request_shutdown)
@@ -174,7 +174,8 @@ def run_server() -> None:
     # 서버 실행 정보를 표준 출력으로 남겨 AMI 준비 과정에서 설정을 확인한다.
     print(
         f"서버 시작: port={args.port}, "
-        f"cpu_work_ms={AutoScalingDemoHandler.cpu_work_ms}"
+        f"cpu_work_ms={AutoScalingDemoHandler.cpu_work_ms}",
+        flush=True,
     )
     server.serve_forever()
     server.server_close()
