@@ -293,10 +293,10 @@ def build_phases(work_ms: int) -> list[LoadPhase]:
 
     # 폭증 구간은 t3.micro 기준 CPU 상승을 관찰하기 쉽도록 기본 work_ms를 크게 적용한다.
     return [
-        LoadPhase(name="워밍업", duration_seconds=120, concurrency=5, work_ms=120),
-        LoadPhase(name="폭증", duration_seconds=300, concurrency=80, work_ms=work_ms),
-        LoadPhase(name="정상 복귀", duration_seconds=120, concurrency=5, work_ms=120),
-        LoadPhase(name="scale-in 관찰", duration_seconds=300, concurrency=0, work_ms=0),
+        LoadPhase(name="워밍업", duration_seconds=180, concurrency=5, work_ms=120),
+        LoadPhase(name="폭증", duration_seconds=360, concurrency=80, work_ms=work_ms),
+        LoadPhase(name="정상 복귀", duration_seconds=180, concurrency=5, work_ms=120),
+        LoadPhase(name="scale-in 관찰", duration_seconds=900, concurrency=0, work_ms=0),
     ]
 
 

@@ -8,8 +8,8 @@
 ## 0. 사전 준비
 
 - AWS 계정 및 IAM 권한 (EC2, ALB, ASG, CloudWatch)
-- 제공된 웹 서버 코드
-- 제공된 부하 테스트 스크립트 (Python)
+- 제공된 웹 서버 코드: https://github.com/zero-uuuuk/KeulKeul/tree/feat/week1/assignment/week1-auto-scaling-load-balancer/app.py
+- 제공된 부하 테스트 스크립트 (Python): https://github.com/zero-uuuuk/KeulKeul/tree/feat/week1/assignment/week1-auto-scaling-load-balancer/load_test.py
 
 ## 1. 인프라 구성 (AWS 콘솔)
 
@@ -18,6 +18,11 @@
 ### 1-1. AMI 준비 (EC2 → 인스턴스)
 
 웹 서버가 설치된 EC2 인스턴스를 만들고 AMI로 저장한다. 이후 ASG가 이 AMI로 서버를 찍어낸다.
+
+> [!NOTE]
+> EC2에 SSH로 접속해 파일을 직접 확인하려면 아래 참고 자료를 확인한다.
+> - EC2 웹 코드 수정 및 VS Code 접속 가이드: https://choi-hee-yeon.tistory.com/244
+> - 원격 서버 SSH config 작성 참고: https://seungriyou.github.io/posts/ssh-vscode/
 
 1. EC2 콘솔 → **인스턴스 시작**
     - AMI: Ubuntu Server 26.04 LTS
@@ -63,6 +68,7 @@
 3. EC2 콘솔 → 인스턴스 선택 → **작업 → 이미지 및 템플릿 → 이미지 생성**
     - 이미지 이름 입력 후 생성
     - EC2 콘솔 → AMIs에서 `available` 상태가 될 때까지 대기
+    - AMI 생성이 완료되면 AMI 준비용으로 띄운 기존 EC2 인스턴스는 종료
 
 ### 1-2. 대상 그룹 생성 (EC2 → 로드 밸런싱 → 대상 그룹)
 
@@ -150,8 +156,9 @@ ASG가 새 서버를 띄울 때 사용할 템플릿.
     - 자동 조정: **대상 추적 크기 조정 정책** 선택
         - 크기 조정 정책 이름: 적절한 이름 입력
         - 지표 유형: `평균 CPU 사용률`
-        - 대상 값: `50`
-        - 인스턴스 워밍업: `300`초
+        - 대상 값: `20`
+        - 인스턴스 워밍업: `120`초
+    - CloudWatch 내에서 그룹 지표 수집 활성화: 켜기
 6. **5, 6단계**: 기본값 유지
 7. **Auto Scaling 그룹 생성**
 
@@ -178,15 +185,20 @@ python3 load_test.py --host http://{ALB_DNS}
 
 | 구간 | 시간 | 내용 |
 | --- | --- | --- |
-| 워밍업 | 2분 | 낮은 부하로 시작 |
-| 폭증 | 5분 | 부하를 급격히 높여 스케일링 유도 |
-| 정상 복귀 | 2분 | 부하를 낮춤 |
-| scale-in 관찰 | 5분 | 서버 수가 줄어드는지 관찰 |
+| 워밍업 | 3분 | 낮은 부하로 시작 |
+| 폭증 | 6분 | 부하를 급격히 높여 스케일링 유도 |
+| 정상 복귀 | 3분 | 부하를 낮춤 |
+| scale-in 관찰 | 15분 | 서버 수가 줄어드는지 관찰 |
+
+> [!NOTE]
+> scale-in은 scale-out보다 보수적으로 동작한다. 부하가 줄어든 뒤에도 CloudWatch 지표 집계, Target Tracking 정책 판단, 인스턴스 워밍업 상태 반영 때문에 서버 수가 줄어드는 데 시간이 걸릴 수 있다.
+> 15분 안에 scale-in이 관찰되지 않아도 정상일 수 있다. 관찰 시간이 끝나면 테스트를 그대로 종료하고 리소스 정리 단계로 넘어간다.
 
 실행 중 확인할 것:
 
 - 터미널에서 응답 시간과 에러율을 실시간으로 관찰한다.
-- **스케일링이 일어나지 않으면**: CPU가 50%를 넘지 않는 것이 원인일 가능성이 높다. 스크립트의 동시 요청 수를 높여 재실행한다.
+- ASG 콘솔 → **인스턴스 관리** 탭에서 인스턴스 수가 2대보다 늘어나는지 확인한다.
+- **스케일링이 일어나지 않으면**: CPU가 20%를 넘지 않는 것이 원인일 가능성이 높다. `--work-ms` 값을 높여 재실행한다.
 - 부하 테스트는 반드시 ALB DNS 주소로 실행한다. EC2 인스턴스에 직접 요청하면 LB를 거치지 않아 스케일링이 관찰되지 않는다.
 
 ## 3. 시각화 (CloudWatch)
@@ -201,12 +213,6 @@ CloudWatch 콘솔 → **지표** → **Auto Scaling** → 해당 ASG 선택
 
 - `GroupDesiredCapacity` — ASG가 목표로 하는 서버 수
 - `GroupInServiceInstances` — 실제로 트래픽을 받는 서버 수
-
-설정:
-
-- 기간(Period): `1분`
-- 통계: `Average`
-- 시간 범위: 부하 테스트 시작 10분 전 ~ 종료 10분 후
 
 **정상적으로 스케일링이 일어났다면** 그래프에서 아래 흐름이 보여야 한다.
 
@@ -230,27 +236,7 @@ CloudWatch 콘솔 → **지표** → **ApplicationELB** → 해당 ALB 선택
     - 통계: `Average`
     - ASG의 `GroupInServiceInstances`와 비교해서 같은 시점에 올라가는지 확인
 
-설정:
-
-- 기간(Period): `1분`
-- 시간 범위: ASG 지표와 동일하게 맞추기
-
-### 3-3. 캡처 기준
-
-아래 세 구간이 모두 한 화면에 들어오도록 시간 범위를 조정한다.
-
-1. **정상 구간** — 부하 전, 서버 2대가 안정적으로 동작
-2. **스케일 아웃 구간** — `GroupDesiredCapacity` 상승 → `GroupInServiceInstances` 상승 → `TargetResponseTime` 회복
-3. **스케일 인 구간** — 부하 감소 후 서버 수가 다시 2로 내려오는 시점
-
-`GroupDesiredCapacity`와 `GroupInServiceInstances`가 2 → N → 2로 변하는 흐름이 캡처에 보여야 한다.
-
-## 4. 제출물
-
-1. **인프라 구성 완료 스크린샷** — 대상 그룹의 대상 탭에서 인스턴스 2대가 `healthy` 상태인 화면
-2. **CloudWatch 스크린샷** — 3번 기준을 충족하는 캡처 1장 이상
-
-## 5. 주의사항
+## 4. 주의사항
 
 과제 완료 후 반드시 아래 순서로 리소스를 삭제한다. 방치하면 EC2, ALB, EBS snapshot 비용이 계속 발생할 수 있다.
 
