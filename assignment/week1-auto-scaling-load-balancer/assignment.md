@@ -232,9 +232,6 @@ CloudWatch 콘솔 → **지표** → **ApplicationELB** → 해당 ALB 선택
 - `TargetResponseTime` — 서버 응답 시간
     - 통계: `p95` (상위 5% 느린 요청의 응답 시간)
     - 폭증 구간에서 올랐다가 새 서버가 투입되면서 내려오는 흐름을 확인
-- `HTTPCode_Target_5XX_Count` — 서버 측 에러 수
-    - 통계: `Sum`
-    - 스케일링이 늦는 구간에 5xx가 얼마나 발생했는지 확인
 - `HealthyHostCount` — LB 기준으로 healthy한 서버 수
     - 통계: `Average`
     - ASG의 `GroupInServiceInstances`와 비교해서 같은 시점에 올라가는지 확인
