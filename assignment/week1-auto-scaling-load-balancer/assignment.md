@@ -1,5 +1,7 @@
 ## Assignment: 트래픽 변화에 따라 자동 확장되는 웹 서버
 
+![ALB + ASG 기반 Auto Scaling 웹 서버 구조](./image.png)
+
 간단한 HTTP 서버를 ALB + ASG로 띄우고, 부하 테스트로 Auto Scaling이 실제로 동작하는 걸 시각화한다.
 
 > [!NOTE]
