@@ -1,2 +1,6 @@
 __pycache__/
 *.py[cod]
+
+assignment/week2-lambda/level4-image-classifier/*.onnx
+assignment/week2-lambda/level4-image-classifier/*.zip
+assignment/week2-lambda/level4-image-classifier/python/
