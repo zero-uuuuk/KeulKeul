@@ -1,5 +1,8 @@
 __pycache__/
 *.py[cod]
+node_modules/
+dist/
+package-lock.json
 
 assignment/week2-lambda/level4-image-classifier/*.onnx
 assignment/week2-lambda/level4-image-classifier/*.zip
