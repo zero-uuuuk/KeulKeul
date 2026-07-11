@@ -1,0 +1,4 @@
+boto3>=1.40.0
+sentence-transformers>=3.0.0
+transformers>=4.40.0
+torch>=2.2.0
