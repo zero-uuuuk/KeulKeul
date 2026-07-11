@@ -284,6 +284,10 @@ filter={"category": "s3"}
 
 ## 9. 기존 Vector DB와 S3 Vectors 비교
 
+> [!NOTE]
+> S3 Vectors의 Latency 분석에 대한 자세한 내용은 다음 글을 참고:
+> - [AWS S3 Vectors Latency Analysis](https://murraycole.com/posts/aws-s3-vectors-latency-analysis)
+
 | 항목 | S3 Vectors | Pinecone 같은 managed Vector DB | OpenSearch vector search | PostgreSQL + pgvector |
 | --- | --- | --- | --- | --- |
 | 기본 성격 | S3 계열의 비용 최적화 vector storage | vector search 전용 managed database | 검색 엔진에 vector search를 결합 | 관계형 DB에 vector 타입과 index 확장 |
