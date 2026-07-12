@@ -13,7 +13,7 @@ const panels = {
   },
   route53: {
     title: "Route 53 Ready",
-    body: "다음 level에서는 이 S3 website endpoint를 Route 53 alias record와 연결합니다.",
+    body: "level4에서는 이 S3 website endpoint를 Route 53 alias record와 연결합니다.",
   },
 };
 

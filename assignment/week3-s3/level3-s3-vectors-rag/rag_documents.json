@@ -1,0 +1,12 @@
+[
+  {
+    "key": "s3-vectors-core",
+    "category": "s3-vectors",
+    "text": "S3 Vectors는 embedding vector를 저장하고 유사도 검색을 수행하기 위한 S3 계열 기능이다. 일반 S3 bucket이 HTML, 이미지, PDF 같은 object를 저장하는 데 초점을 둔다면, S3 vector bucket은 숫자 배열 형태의 vector 데이터를 저장하고 query하는 데 초점을 둔다. 구조는 vector bucket, vector index, vector로 나눠 이해할 수 있다. vector bucket은 여러 vector index를 담는 큰 저장 단위이고, vector index는 같은 dimension과 distance metric을 공유하는 vector들의 검색 단위이다. 실제 검색은 vector bucket 전체가 아니라 특정 vector index 안에서 수행된다. vector는 embedding 모델이 만든 숫자 배열이며, S3 Vectors에 저장할 때는 key, data, metadata를 함께 보낸다. key는 vector를 구분하는 이름이고, data에는 float32 숫자 배열이 들어가며, metadata에는 category나 source_text처럼 검색 결과를 설명하거나 filter에 활용할 정보를 넣을 수 있다. 이번 실습에서는 Hugging Face sentence-transformers 모델이 문서를 embedding으로 바꾸고, 그 결과를 S3 Vectors의 PutVectors API로 저장한다. 질문이 들어오면 같은 embedding 모델로 질문 vector를 만들고, QueryVectors API로 가까운 문서를 찾는다. S3 vector bucket은 public access를 열 수 없고, 접근은 s3vectors 전용 권한을 IAM과 resource policy로 제어한다."
+  },
+  {
+    "key": "local-rag-flow",
+    "category": "rag",
+    "text": "RAG는 Retrieval-Augmented Generation의 줄임말로, LLM이 답변하기 전에 관련 문서를 먼저 검색하고 그 검색 결과를 근거로 답변을 생성하는 방식이다. 이 실습에서는 embedding과 LLM은 로컬 PC에서 실행하고, vector 저장 및 유사도 검색만 AWS S3 Vectors를 사용한다. 먼저 rag_documents.json에 있는 긴 문서 두 개를 읽고, 각 문서의 text를 Hugging Face sentence-transformers 모델로 embedding한다. 그 다음 embedding 숫자 배열을 S3 Vectors가 요구하는 key, data, metadata 구조로 감싸서 vector index에 저장한다. 질문을 실행할 때도 동일한 embedding 모델을 사용해야 한다. 질문 vector와 문서 vector가 같은 embedding 공간에 있어야 거리 계산이 의미를 가지기 때문이다. QueryVectors는 질문과 가까운 문서들을 반환하고, 스크립트는 결과의 metadata.source_text를 모아 LLM prompt의 context로 넣는다. 로컬 LLM은 이 context와 질문을 함께 받아 한국어 답변을 생성한다. 따라서 S3 Vectors는 지식을 직접 생성하는 모델이 아니라, 질문과 의미가 가까운 문서를 찾아주는 vector store 역할을 한다. 답변 품질은 embedding 모델, 저장된 문서의 품질, 검색된 context, LLM prompt 구성에 함께 영향을 받는다."
+  }
+]
