@@ -1,0 +1,12 @@
+{
+  "requestContext": {
+    "http": {
+      "method": "GET",
+      "path": "/"
+    }
+  },
+  "queryStringParameters": {
+    "title": "president"
+  },
+  "isBase64Encoded": false
+}

@@ -1,0 +1,79 @@
+{
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/"
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "items": [
+      {
+        "user_id": "younguk",
+        "todo_id": "membership",
+        "name": "Younguk",
+        "title": "president",
+        "status": "active"
+      },
+      {
+        "user_id": "yujin",
+        "todo_id": "membership",
+        "name": "Yujin",
+        "title": "vice_president",
+        "status": "active"
+      },
+      {
+        "user_id": "hyundo",
+        "todo_id": "membership",
+        "name": "Hyundo",
+        "title": "member",
+        "status": "active"
+      },
+      {
+        "user_id": "juhyun",
+        "todo_id": "membership",
+        "name": "Juhyun",
+        "title": "member",
+        "status": "active"
+      },
+      {
+        "user_id": "taeho",
+        "todo_id": "membership",
+        "name": "Taeho",
+        "title": "member",
+        "status": "active"
+      },
+      {
+        "user_id": "munho",
+        "todo_id": "membership",
+        "name": "Munho",
+        "title": "member",
+        "status": "active"
+      },
+      {
+        "user_id": "suha",
+        "todo_id": "membership",
+        "name": "Suha",
+        "title": "member",
+        "status": "active"
+      },
+      {
+        "user_id": "taehwan",
+        "todo_id": "membership",
+        "name": "Taehwan",
+        "title": "member",
+        "status": "active"
+      },
+      {
+        "user_id": "hyunryeo",
+        "todo_id": "membership",
+        "name": "Hyunryeo",
+        "title": "member",
+        "status": "active"
+      }
+    ]
+  },
+  "isBase64Encoded": false
+}

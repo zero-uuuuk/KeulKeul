@@ -1,0 +1,13 @@
+{
+  "requestContext": {
+    "http": {
+      "method": "DELETE",
+      "path": "/"
+    }
+  },
+  "queryStringParameters": {
+    "user_id": "hyunryeo",
+    "todo_id": "membership"
+  },
+  "isBase64Encoded": false
+}
