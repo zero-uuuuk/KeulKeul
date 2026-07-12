@@ -1,0 +1,12 @@
+{
+  "requestContext": {
+    "http": {
+      "method": "GET",
+      "path": "/"
+    }
+  },
+  "queryStringParameters": {
+    "title": "vice_president"
+  },
+  "isBase64Encoded": false
+}

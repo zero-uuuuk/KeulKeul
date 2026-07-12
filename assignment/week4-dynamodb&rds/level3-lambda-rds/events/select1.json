@@ -1,0 +1,10 @@
+{
+  "requestContext": {
+    "http": {
+      "method": "GET",
+      "path": "/"
+    }
+  },
+  "queryStringParameters": null,
+  "isBase64Encoded": false
+}
