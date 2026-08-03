@@ -42,8 +42,10 @@ assignment
 │   └── Presigned URL, static website, S3 Vectors RAG, Route 53 domain
 ├── week4-dynamodb&rds
 │   └── DynamoDB, RDS, Lambda DB 연결 실습
-└── week5-serverless-architecture
-    └── AI model approval serverless architecture
+├── week5-serverless-architecture
+│   └── AI model approval serverless architecture
+└── week6-cloudwatch
+    └── CloudWatch Logs, Metrics, Alarm, Dashboard
 ```
 
 ---
