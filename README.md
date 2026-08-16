@@ -44,8 +44,10 @@ assignment
 │   └── DynamoDB, RDS, Lambda DB 연결 실습
 ├── week5-serverless-architecture
 │   └── AI model approval serverless architecture
-└── week6-cloudwatch
-    └── CloudWatch Logs, Metrics, Alarm, Dashboard
+├── week6-cloudwatch
+│   └── CloudWatch Logs, Metrics, Alarm, Dashboard
+└── week7-docker1
+    └── Docker Image, Container, Dockerfile
 ```
 
 ---
