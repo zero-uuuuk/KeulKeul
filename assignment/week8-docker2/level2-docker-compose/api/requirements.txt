@@ -1,0 +1,4 @@
+fastapi
+pymysql==1.1.1
+cryptography
+uvicorn[standard]
