@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KeulKeul Member Check</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: #111827;
+      background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 45%, #ecfeff 100%);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    main {
+      width: min(100%, 520px);
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 18px;
+      box-shadow: 0 24px 70px rgba(15, 23, 42, 0.14);
+      padding: 32px;
+    }
+    .badge {
+      width: fit-content;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.15;
+    }
+    p {
+      margin: 12px 0 24px;
+      color: #4b5563;
+      line-height: 1.6;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .form {
+      display: flex;
+      gap: 10px;
+    }
+    input {
+      flex: 1;
+      min-width: 0;
+      height: 46px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: 16px;
+    }
+    button {
+      height: 46px;
+      border: 0;
+      border-radius: 10px;
+      padding: 0 18px;
+      background: #2563eb;
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover { background: #1d4ed8; }
+    pre {
+      min-height: 118px;
+      margin: 18px 0 0;
+      background: #0f172a;
+      color: #dbeafe;
+      padding: 16px;
+      border-radius: 12px;
+      overflow: auto;
+      line-height: 1.5;
+    }
+    @media (max-width: 520px) {
+      main { padding: 24px; }
+      h1 { font-size: 28px; }
+      .form { flex-direction: column; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="badge">ECS Fargate Web + API</div>
+    <h1>클클 회원 확인</h1>
+    <p>Web service가 화면을 보여주고, API service가 클클 회원 여부를 응답한다.</p>
+    <label for="name">이름</label>
+    <div class="form">
+      <input id="name" value="정유진" autocomplete="off">
+      <button id="load">확인</button>
+    </div>
+    <pre id="result">아직 호출하지 않음</pre>
+  </main>
+  <script>
+    document.getElementById("load").addEventListener("click", async () => {
+      const name = document.getElementById("name").value.trim();
+      const res = await fetch(`/api/member?name=${encodeURIComponent(name)}`);
+      const data = await res.json();
+      document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+    });
+  </script>
+</body>
+</html>
