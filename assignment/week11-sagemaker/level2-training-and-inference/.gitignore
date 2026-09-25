@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+config.json
+lab_state.json
+lab_state.json.tmp
+outputs/
+iam/rendered/
+.env
+*.pem
+*.zip

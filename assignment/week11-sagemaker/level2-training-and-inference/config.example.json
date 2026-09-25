@@ -1,0 +1,13 @@
+{
+  "region": "ap-northeast-2",
+  "profile": "keulkeul",
+  "account_id": "{ACCOUNT_ID}",
+  "bucket": "keulkeul-week11-{ACCOUNT_ID}-본인영문이름",
+  "role_arn": "arn:aws:iam::{ACCOUNT_ID}:role/keulkeul-week11-sagemaker-role",
+  "model_data": "s3://실습1버킷/week11/output/학습작업이름/output/model.tar.gz",
+  "subnet_ids": [
+    "subnet-본인A",
+    "subnet-본인B"
+  ],
+  "security_group_id": "sg-본인값"
+}

@@ -1,0 +1,7 @@
+{
+  "region": "ap-northeast-2",
+  "profile": "keulkeul",
+  "account_id": "{ACCOUNT_ID}",
+  "bucket": "keulkeul-week11-{ACCOUNT_ID}-본인영문이름",
+  "role_arn": "arn:aws:iam::{ACCOUNT_ID}:role/keulkeul-week11-sagemaker-role"
+}

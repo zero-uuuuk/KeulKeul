@@ -1,0 +1,110 @@
+{
+  "seed": 110925,
+  "synthetic": true,
+  "real_trading_calendar": false,
+  "dataset_version": "classroom-ranking-v2",
+  "scenario": "Constructed periodic momentum with small noise; not market observations.",
+  "intended_latest_top_four": [
+    "YWEL",
+    "YJBK",
+    "HDMT",
+    "HRBI"
+  ],
+  "scenario_return_at_day_1000": {
+    "YWEL": 0.03,
+    "YJBK": 0.022,
+    "HDMT": 0.014,
+    "HRBI": 0.006,
+    "JHFD": -0.002,
+    "THCT": -0.006,
+    "MHCH": -0.01,
+    "SHEN": -0.014,
+    "THTC": -0.018,
+    "SYTR": -0.022,
+    "JCSC": -0.026,
+    "HLPM": -0.03
+  },
+  "ranking_note": "Intended scenario order; actual model ranking requires retraining and evaluation.",
+  "raw_rows": 12000,
+  "feature_order": [
+    "return_1",
+    "return_5",
+    "ma5_gap",
+    "ma20_gap",
+    "volatility_5",
+    "volume_ratio_5",
+    "company_YWEL",
+    "company_YJBK",
+    "company_HDMT",
+    "company_JHFD",
+    "company_THCT",
+    "company_MHCH",
+    "company_SHEN",
+    "company_THTC",
+    "company_HRBI",
+    "company_SYTR",
+    "company_JCSC",
+    "company_HLPM"
+  ],
+  "target": "next_close / close - 1",
+  "prediction_time": "after current close",
+  "dropped_boundary_days": [
+    700,
+    850
+  ],
+  "counts": {
+    "train": 8148,
+    "validation": 1788,
+    "test": 1788
+  },
+  "companies": [
+    {
+      "ticker": "YWEL",
+      "name": "영욱전자"
+    },
+    {
+      "ticker": "YJBK",
+      "name": "유진문고"
+    },
+    {
+      "ticker": "HDMT",
+      "name": "현도자동차"
+    },
+    {
+      "ticker": "JHFD",
+      "name": "주현식품"
+    },
+    {
+      "ticker": "THCT",
+      "name": "태호건설"
+    },
+    {
+      "ticker": "MHCH",
+      "name": "문호화학"
+    },
+    {
+      "ticker": "SHEN",
+      "name": "수하에너지"
+    },
+    {
+      "ticker": "THTC",
+      "name": "태환통신"
+    },
+    {
+      "ticker": "HRBI",
+      "name": "현려바이오"
+    },
+    {
+      "ticker": "SYTR",
+      "name": "성윤물산"
+    },
+    {
+      "ticker": "JCSC",
+      "name": "지찬반도체"
+    },
+    {
+      "ticker": "HLPM",
+      "name": "혜린제약"
+    }
+  ]
+}
