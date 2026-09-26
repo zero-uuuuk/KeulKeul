@@ -30,10 +30,6 @@ week11-sagemaker/
 
 폴더 이름은 기존 경로·가상환경을 보존하기 위해 유지한다. 주 진행 경로는 Windows CMD + AWS Console이다.
 
-## 가상 데이터 시나리오
-
-CSV를 바꿔도 기존 `model.tar.gz`는 바뀌지 않는다. 변경한 데이터로 새로 학습한 모델을 사용해야 한다. 가상 데이터의 성능은 실제 주가 예측 성능을 의미하지 않는다.
-
 ## 실습1 시각화
 
 실습1 11장에서 `python visualize_model.py`를 실행하면 S3의 학습 모델을 내려받아 `outputs/model_report.html`을 만든다. 기업별 예상 수익률 순위를 확인할 수 있다. 저장된 회귀 모델로 PC에서 예측하며 새 학습이나 Endpoint를 생성하지 않는다.
