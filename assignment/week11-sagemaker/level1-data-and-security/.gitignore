@@ -5,7 +5,10 @@ config.json
 lab_state.json
 lab_state.json.tmp
 outputs/
-iam/rendered/
+iam/rendered/*
+!iam/rendered/execution-policy.json
+!iam/rendered/operator-policy.json
+!iam/rendered/trust.json
 .env
 *.pem
 *.zip
