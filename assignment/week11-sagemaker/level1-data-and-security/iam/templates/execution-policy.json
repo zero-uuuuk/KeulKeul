@@ -1,0 +1,58 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucketLocation",
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::keulkeul-week11-{ACCOUNT_ID}-본인영문이름"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:AbortMultipartUpload"
+      ],
+      "Resource": "arn:aws:s3:::keulkeul-week11-{ACCOUNT_ID}-본인영문이름/week11/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+      ],
+      "Resource": "arn:aws:ecr:ap-northeast-2:366743142698:repository/sagemaker-xgboost"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": [
+        "arn:aws:logs:ap-northeast-2:{ACCOUNT_ID}:log-group:/aws/sagemaker/*",
+        "arn:aws:logs:ap-northeast-2:{ACCOUNT_ID}:log-group:/aws/sagemaker/*:*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:PutMetricData"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
