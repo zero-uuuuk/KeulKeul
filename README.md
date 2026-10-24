@@ -75,6 +75,7 @@ assignment
 | 정현도 | [@oen123456](https://github.com/oen123456) |
 | 지문호 | [@mloolhz](https://github.com/mloolhz) |
 | 임수하 | [@imnshxa](https://github.com/imnshxa) |
+| 하지찬 | [@yttco99](https://github.com/yttco99) |
 
 ---
 
