@@ -46,8 +46,22 @@ assignment
 │   └── AI model approval serverless architecture
 ├── week6-cloudwatch
 │   └── CloudWatch Logs, Metrics, Alarm, Dashboard
-└── week7-docker1
-    └── Docker Image, Container, Dockerfile
+├── week7-docker1
+│   └── Docker Image, Container, Dockerfile
+├── week8-docker2
+│   └── GitHub Container Registry, Docker Compose로 Web·API·DB 연결
+├── week9-docker3
+│   └── ECR, ECS Fargate·EC2 배포, ALB 요청 분리
+├── week10-athena
+│   └── Glue, Athena, EC2·OpenAI로 시청 로그 분석
+├── week11-sagemaker
+│   └── SageMaker 모델 학습, 주가 예측, Endpoint 배포
+├── week12-jev
+│   └── Lambda에서 OpenAI와 Jev 판단 결과 비교
+├── week13-kubernetes
+│   └── Minikube, Pod·Service, 부하분산·자가복구·롤백
+└── week14-ec2-vlm-finetuning
+    └── GPU Quota 준비, EC2 GPU에서 VLM LoRA 미세조정
 ```
 
 ---
