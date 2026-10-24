@@ -3,5 +3,6 @@ torchvision==0.21.0
 transformers==4.51.3
 peft==0.15.2
 accelerate==1.6.0
-datasets==3.5.0
+# Parquet 스트리밍 종료 오류 회피: https://github.com/apache/arrow/issues/45214
+datasets==3.1.0
 Pillow==11.2.1
