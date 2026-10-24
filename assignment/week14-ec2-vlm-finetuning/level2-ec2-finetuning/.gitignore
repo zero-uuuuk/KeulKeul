@@ -1,0 +1,6 @@
+.venv/
+data/
+outputs/
+*.tar.gz
+.pytest_cache/
+__pycache__/
