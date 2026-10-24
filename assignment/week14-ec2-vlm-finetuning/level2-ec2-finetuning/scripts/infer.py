@@ -7,7 +7,7 @@ import torch
 from peft import PeftModel
 from PIL import Image, ImageOps
 
-from . import GROUPS, MODEL_ID, MODEL_REVISION, QUESTION
+from . import MODEL_ID, MODEL_REVISION, QUESTION
 from .train import (
     load_model,
     load_processor,
@@ -40,7 +40,7 @@ def generate_answer(model: Any, processor: Any, image_path: Path, question: str)
 
 
 def main() -> None:
-    """주제별 검증 사진 네 장에 대한 모델의 답변을 출력한다."""
+    """검증 데이터의 모든 사진에 대한 모델의 답변을 출력한다."""
     # adapter·데이터 경로와 실행 장치 인자 읽기
     parser = argparse.ArgumentParser(description="사진에 대한 모델 응답 확인")
     parser.add_argument("--adapter", type=Path)
@@ -66,12 +66,15 @@ def main() -> None:
         model = PeftModel.from_pretrained(model, args.adapter)
     model.eval()
 
-    # 주제별 검증 사진 한 장씩 선택 및 질문·답변 출력
+    # 전체 검증 사진의 진행 순서·주제·질문·답변 출력
     records = read_records(args.data_dir, "validation")
-    for group in GROUPS:
-        row = next(row for row in records if row["group"] == group)
+    for index, row in enumerate(records, start=1):
         image_path = args.data_dir / row["image"]
-        print(f"\n사진: {image_path}\n질문: {QUESTION}")
+        print(
+            f"\n[{index}/{len(records)}] {row['group']}\n"
+            f"사진: {image_path}\n질문: {QUESTION}",
+            flush=True,
+        )
         print("답변:", generate_answer(model, processor, image_path, QUESTION))
 
 
