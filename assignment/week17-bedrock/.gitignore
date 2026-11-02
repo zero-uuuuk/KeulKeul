@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+config.json
+.local/
+outputs/
+iam/generated/
+.env*
+*.pem
+*.key
+
+.config-candidate.json
+.aws/
