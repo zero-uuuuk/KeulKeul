@@ -60,8 +60,10 @@ assignment
 │   └── Lambda에서 OpenAI와 Jev 판단 결과 비교
 ├── week13-kubernetes
 │   └── Minikube, Pod·Service, 부하분산·자가복구·롤백
-└── week14-ec2-vlm-finetuning
-    └── GPU Quota 준비, EC2 GPU에서 VLM LoRA 미세조정
+├── week14-ec2-vlm-finetuning
+│   └── GPU Quota 준비, EC2 GPU에서 VLM LoRA 미세조정
+└── week17-bedrock
+    └── Bedrock 모델 호출, Knowledge Bases 문서 검색, RAG 비교
 ```
 
 ---

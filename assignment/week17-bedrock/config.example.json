@@ -1,0 +1,13 @@
+{
+  "region": "ap-northeast-2",
+  "profile": "keulkeul-bedrock",
+  "account_id": "YOUR_12_DIGIT_ACCOUNT_ID",
+  "suffix": "student01",
+  "bucket": "",
+  "vector_bucket": "",
+  "vector_index": "documents",
+  "service_role": "",
+  "knowledge_base_id": "",
+  "data_source_id": "",
+  "model_id": "apac.amazon.nova-lite-v1:0"
+}
