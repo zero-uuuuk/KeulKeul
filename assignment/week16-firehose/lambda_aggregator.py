@@ -128,17 +128,26 @@ def to_bool(v) -> bool:
     return str(v).lower() == "true"
 
 
+def num(v, cast=int, default=0):
+    """Athena는 NULL을 빈 문자열로 돌려준다. 빈 값은 default로."""
+    try:
+        return cast(v)
+    except (TypeError, ValueError):
+        return default
+
+
 def build(two: list[dict], trend: list[dict], series: list[dict]) -> dict:
     times = sorted({r["polled_at"] for r in two}, reverse=True)
     if not times:
         return {"generated_at": datetime.now(KST).isoformat(timespec="seconds"), "empty": True}
+    two = [r for r in two if r.get("stationId") and r.get("parkingBikeTotCnt") not in ("", None)]
     latest = [r for r in two if r["polled_at"] == times[0]]
-    prev = {r["stationId"]: int(r["parkingBikeTotCnt"]) for r in two if len(times) > 1 and r["polled_at"] == times[1]}
+    prev = {r["stationId"]: num(r["parkingBikeTotCnt"]) for r in two if len(times) > 1 and r["polled_at"] == times[1]}
 
     stations, feed = [], []
     bikes = empty = over = rentals = returns = changed = 0
     for r in latest:
-        b = int(r["parkingBikeTotCnt"])
+        b = num(r["parkingBikeTotCnt"])
         d = b - prev[r["stationId"]] if r["stationId"] in prev else None
         if d:
             changed += 1
@@ -149,8 +158,8 @@ def build(two: list[dict], trend: list[dict], series: list[dict]) -> dict:
         bikes += b; empty += ie; over += io_
         stations.append({
             "id": r["stationId"], "name": r["stationName"],
-            "lat": float(r["lat"]), "lon": float(r["lon"]),
-            "bikes": b, "racks": int(r["rackTotCnt"]), "empty_racks": int(r["empty_racks"]),
+            "lat": num(r["lat"], float, 0.0), "lon": num(r["lon"], float, 0.0),
+            "bikes": b, "racks": num(r["rackTotCnt"]), "empty_racks": num(r["empty_racks"]),
             "is_empty": ie, "is_overflow": io_, "delta": d,
         })
     feed.sort(key=lambda x: -abs(x["delta"]))
@@ -162,7 +171,7 @@ def build(two: list[dict], trend: list[dict], series: list[dict]) -> dict:
 
     ser = {}
     for r in series:
-        ser.setdefault(r["stationId"], []).append([r["polled_at"], int(r["parkingBikeTotCnt"])])
+        ser.setdefault(r["stationId"], []).append([r["polled_at"], num(r["parkingBikeTotCnt"])])
     by_id = {s["id"]: s for s in stations}
     focus = [{**by_id[i], "series": ser.get(i, [])} for i in FOCUS if i in by_id]
 
@@ -171,13 +180,13 @@ def build(two: list[dict], trend: list[dict], series: list[dict]) -> dict:
         "polled_at": times[0],
         "prev_polled_at": times[1] if len(times) > 1 else None,
         "totals": {"stations": len(latest), "bikes": bikes, "empty": empty, "overflow": over,
-                   "records_3h": sum(int(t["records"]) for t in trend)},
+                   "records_3h": sum(num(t["records"]) for t in trend)},
         "deltas": {"bikes": bikes - prev_bikes if prev_bikes is not None else None,
                    "empty": empty - prev_empty if prev_empty is not None else None,
                    "overflow": over - prev_over if prev_over is not None else None},
         "changes": {"rentals": rentals, "returns": returns, "changed": changed},
         "feed": feed[:10],
-        "trend": [{"t": t["polled_at"], "bikes": int(t["total_bikes"]), "empty": int(t["empty_cnt"])} for t in trend],
+        "trend": [{"t": t["polled_at"], "bikes": num(t["total_bikes"]), "empty": num(t["empty_cnt"])} for t in trend],
         "focus": focus,
         "stations": stations,
     }
