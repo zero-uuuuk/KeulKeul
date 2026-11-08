@@ -2,7 +2,7 @@
 
 **생성 모델을 직접 호출하고, 문서를 검색한 뒤, 검색 근거를 모델에 전달하는 과정을 단계별로 확인합니다.**
 
-이 페이지는 참가자가 위에서부터 따라가는 통합 안내서입니다. 코드는 [GitHub 저장소](https://github.com/zero-uuuuk/KeulKeul/tree/main/assignment/week17-bedrock)에서 받습니다. 저장소를 clone하거나 **Code → Download ZIP**으로 내려받아 압축을 풉니다. 아래 경로와 명령은 `assignment/week17-bedrock` 폴더를 기준으로 합니다.
+이 페이지는 참가자가 위에서부터 따라가는 통합 안내서입니다. 코드는 [GitHub 저장소](https://github.com/zero-uuuuk/KeulKeul/tree/main/assignment/week15-bedrock)에서 받습니다. 저장소를 clone하거나 **Code → Download ZIP**으로 내려받아 압축을 풉니다. 아래 경로와 명령은 `assignment/week15-bedrock` 폴더를 기준으로 합니다.
 
 배포 상태: **진행자 AWS 전체 리허설 전 초안**. 코드의 로컬 검사는 완료했으며, 실제 AWS 전체 실행은 진행자가 참가자 배포 전에 확인합니다.
 
@@ -65,7 +65,7 @@ Assignment 3 · 검색과 생성 연결
 - 개인 AWS 계정과 IAM 사용자/역할 로그인
 - 실습 권한을 준비할 관리자 또는 진행자
 - Python 3.11, AWS CLI v2.32.0 이상, 인터넷 연결
-- 이 저장소의 **assignment/week17-bedrock** 폴더 전체
+- 이 저장소의 **assignment/week15-bedrock** 폴더 전체
 
 본 실습은 **서울 ap-northeast-2** 기준입니다. 임베딩은 Titan Text Embeddings V2의 1024차원 float32, 생성은 Nova Lite APAC 추론 프로파일을 사용합니다. APAC 추론은 서울 외 지원 리전에서 처리될 수 있습니다. 모델·임베딩·저장·검색 비용이 발생할 수 있습니다. 예산 알림은 자동 지출 차단 기능이 아닙니다.
 
@@ -73,12 +73,12 @@ Assignment 3 · 검색과 생성 연결
 
 ## 1. 파일을 받고 실행 폴더 열기
 
-저장소를 clone하거나 **Code → Download ZIP**으로 내려받아 압축을 풉니다. `KeulKeul/assignment/week17-bedrock` 폴더를 엽니다. ZIP으로 받았다면 최상위 폴더 이름은 `KeulKeul-main`일 수 있습니다. ZIP 안에서 바로 실행하지 않습니다.
+저장소를 clone하거나 **Code → Download ZIP**으로 내려받아 압축을 풉니다. `KeulKeul/assignment/week15-bedrock` 폴더를 엽니다. ZIP으로 받았다면 최상위 폴더 이름은 `KeulKeul-main`일 수 있습니다. ZIP 안에서 바로 실행하지 않습니다.
 
 다음 파일이 보이는 폴더가 실행 위치입니다.
 
 ```text
-week17-bedrock/
+week15-bedrock/
 ├── README.md
 ├── NOTION_GUIDE.md
 ├── setup.ps1

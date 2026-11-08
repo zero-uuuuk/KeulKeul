@@ -3,11 +3,11 @@
 EventBridge Scheduler가 1분마다 호출. 정적 대시보드(index.html)가 이 파일을 읽는다.
 
 환경 변수
-  ATHENA_DB        week18_firehose_db
+  ATHENA_DB        week16_firehose_db
   ATHENA_TABLE     bike_status
-  ATHENA_OUTPUT    s3://keulkeul-week18-{ACCOUNT_ID}-{성}/athena-results/
-  WEB_BUCKET       keulkeul-week18-{ACCOUNT_ID}-{성}-web
-  DATA_BUCKET      keulkeul-week18-{ACCOUNT_ID}-{성}        (파티션 등록용 LOCATION)
+  ATHENA_OUTPUT    s3://keulkeul-week16-{ACCOUNT_ID}-{성}/athena-results/
+  WEB_BUCKET       keulkeul-week16-{ACCOUNT_ID}-{성}-web
+  DATA_BUCKET      keulkeul-week16-{ACCOUNT_ID}-{성}        (파티션 등록용 LOCATION)
   FOCUS_STATIONS   ST-2327                                   (쉼표로 여러 개 가능)
 
 Lambda 설정
@@ -36,7 +36,7 @@ FULL_POLL = 2000
 athena = boto3.client("athena")
 s3 = boto3.client("s3")
 
-DB = os.environ.get("ATHENA_DB", "week18_firehose_db")
+DB = os.environ.get("ATHENA_DB", "week16_firehose_db")
 TABLE = os.environ.get("ATHENA_TABLE", "bike_status")
 OUTPUT = os.environ["ATHENA_OUTPUT"]
 WEB_BUCKET = os.environ["WEB_BUCKET"]

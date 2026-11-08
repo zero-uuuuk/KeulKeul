@@ -30,7 +30,7 @@ FULL_POLL = 2000  # 이 건수 이상 도착한 폴링만 "완전히 도착"으�
 
 DEFAULTS = dict(
     region="ap-northeast-2",
-    database="week18_firehose_db",
+    database="week16_firehose_db",
     table="bike_status",
     station_id="ST-2327",
     station_label="한양대역 1번출구",
@@ -48,7 +48,7 @@ def find_results_bucket(region: str) -> str | None:
     import boto3
     s3 = boto3.client("s3", region_name=region)
     for b in s3.list_buckets().get("Buckets", []):
-        if b["Name"].startswith("keulkeul-week18-"):
+        if b["Name"].startswith("keulkeul-week16-"):
             return f"s3://{b['Name']}/athena-results/"
     return None
 
