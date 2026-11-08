@@ -173,7 +173,7 @@ function render(d) {
 function drawMap(st) {
   if (!map) {
     map = L.map("map", { zoomControl: true }).setView(HYU, 14);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { attribution: "© OpenStreetMap, © CARTO", maxZoom: 19 }).addTo(map);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap contributors", maxZoom: 19 }).addTo(map);
     layer = L.layerGroup().addTo(map);
   }
   layer.clearLayers();
