@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>따릉이 실시간 현황</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root { --navy:#1f2a5c; --teal:#1a5f7a; --bg:#f3f6f9; --card:#fff; --muted:#6b7390; --line:#e3e7f0; --red:#dc3c3c; --orange:#f0a028; --green:#32aa5a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--navy); font-family:"Noto Sans KR",sans-serif; }
+  .wrap { max-width:1280px; margin:0 auto; padding:28px 20px 60px; }
+  h1 { margin:0 0 6px; font-size:28px; font-weight:700; }
+  .sub { color:var(--muted); font-size:14px; margin-bottom:22px; display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+  .sub button { background:var(--teal); color:#fff; border:0; border-radius:8px; padding:7px 14px; font-size:13px; cursor:pointer; font-family:inherit; }
+  .sub button:disabled { opacity:.5; }
+  .flow { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:24px; }
+  .flow div { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 8px; text-align:center; position:relative; }
+  .flow div b { display:block; font-size:15px; }
+  .flow div span { font-size:12px; color:var(--muted); }
+  .flow div:not(:last-child)::after { content:"→"; position:absolute; right:-11px; top:14px; color:#b0b7cc; }
+  .cards { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:8px; }
+  .card { background:var(--card); border-radius:10px; padding:14px 16px; border-top:4px solid var(--teal); }
+  .card .k { font-size:12px; color:var(--muted); }
+  .card .v { font-size:26px; font-weight:700; margin-top:2px; }
+  .card .d { font-size:13px; margin-top:2px; }
+  .up { color:var(--green); } .down { color:var(--red); } .flat { color:var(--muted); }
+  .cap { font-size:12.5px; color:var(--muted); margin:6px 0 22px; }
+  h2 { font-size:18px; margin:0 0 12px; display:flex; align-items:center; gap:12px; }
+  h2 small { font-size:12px; color:var(--muted); font-weight:400; }
+  .panel { background:var(--card); border-radius:12px; padding:18px 20px; margin-bottom:22px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  .mini { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:12px; }
+  .mini div { background:var(--bg); border-radius:8px; padding:10px 14px; }
+  .mini .k { font-size:12px; color:var(--muted); } .mini .v { font-size:22px; font-weight:700; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th { text-align:left; font-size:12px; color:var(--teal); border-bottom:2px solid var(--teal); padding:6px 8px; }
+  td { padding:7px 8px; border-bottom:1px solid var(--line); }
+  td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  #map { height:460px; border-radius:10px; }
+  .legend { font-size:12.5px; color:var(--muted); margin-top:8px; }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin:0 4px 0 10px; vertical-align:middle; }
+  .detail { margin-top:16px; border-top:1px dashed var(--line); padding-top:14px; }
+  .detail h3 { margin:0 0 10px; font-size:16px; }
+  .detail .mini { grid-template-columns:repeat(5,1fr); }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .seg button { background:#fff; border:0; padding:6px 12px; font-size:13px; cursor:pointer; color:var(--navy); font-family:inherit; }
+  .seg button.on { background:var(--teal); color:#fff; }
+  .err { background:#fdecec; color:#8a1f1f; border-radius:10px; padding:14px 18px; margin-bottom:20px; }
+  canvas { max-height:220px; }
+  @media (max-width:900px) { .flow,.cards { grid-template-columns:repeat(3,1fr); } .row { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>따릉이 실시간 현황</h1>
+  <div class="sub">
+    <span>데이터 <b id="polled">–</b> 수집 · <span id="age">–</span></span>
+    <span>갱신 <span id="gen">–</span></span>
+    <button id="refresh">지금 새로고침</button>
+    <span id="countdown"></span>
+  </div>
+
+  <div class="flow">
+    <div><b>Lambda 폴러</b><span>30초마다 API 호출</span></div>
+    <div><b>Firehose</b><span>수신 · 버퍼</span></div>
+    <div><b>Lambda 변환</b><span>타입 변환 · 파생 필드</span></div>
+    <div><b>S3</b><span>clean/hour=HH/</span></div>
+    <div><b>Athena → Lambda 집계</b><span>1분마다 data.json</span></div>
+    <div><b>S3 정적 웹</b><span>이 페이지</span></div>
+  </div>
+
+  <div id="error" class="err" style="display:none"></div>
+
+  <div class="cards" id="cards"></div>
+  <div class="cap">화살표는 직전 폴링(30초 전) 대비 변화. 누적 레코드는 최근 3시간 동안 S3에 쌓인 건수.</div>
+
+  <div class="panel">
+    <h2>30초 사이에 일어난 일 <small id="feedcap"></small></h2>
+    <div class="mini" id="changes"></div>
+    <table><thead><tr><th>대여소</th><th style="text-align:right">30초 전</th><th style="text-align:right">지금</th><th style="text-align:right">변화</th></tr></thead><tbody id="feed"></tbody></table>
+  </div>
+
+  <div class="row">
+    <div class="panel">
+      <h2>서울 전체 추이 <small>최근 3시간</small></h2>
+      <canvas id="c_bikes"></canvas>
+      <canvas id="c_empty" style="margin-top:14px"></canvas>
+    </div>
+    <div class="panel" id="focus"></div>
+  </div>
+
+  <div class="panel">
+    <h2>지도 <span class="seg"><button data-v="hyu" class="on">한양대 주변</button><button data-v="seoul">서울 전체</button></span></h2>
+    <div id="map"></div>
+    <div class="legend"><span class="dot" style="background:var(--red)"></span>0대 <span class="dot" style="background:var(--orange)"></span>1~3대 <span class="dot" style="background:var(--green)"></span>4대 이상 · 흰 테두리 = 30초 사이 변한 대여소 · 점을 클릭하면 아래에 상세</div>
+    <div class="detail" id="detail"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const REFRESH = 30;
+const HYU = [37.55657959, 127.04335785];
+let charts = {}, map, layer, view = "hyu", selected = null, data = null, timer = REFRESH;
+
+const $ = s => document.querySelector(s);
+const fmt = n => n == null ? "–" : n.toLocaleString("ko-KR");
+const hhmm = iso => iso ? iso.slice(11, 16) : "";
+const hhmmss = iso => iso ? iso.slice(11, 19) : "";
+function delta(d, inverse) {
+  if (d == null || d === 0) return "";
+  const good = inverse ? d < 0 : d > 0;
+  return `<div class="d ${good ? "up" : "down"}">${d > 0 ? "▲ +" : "▼ "}${d}</div>`;
+}
+function color(b) { return b === 0 ? "#dc3c3c" : b <= 3 ? "#f0a028" : "#32aa5a"; }
+
+function lineChart(id, labels, values, label, col) {
+  if (charts[id]) { charts[id].data.labels = labels; charts[id].data.datasets[0].data = values; charts[id].update("none"); return; }
+  charts[id] = new Chart($(id), { type: "line",
+    data: { labels, datasets: [{ label, data: values, borderColor: col, borderWidth: 2, pointRadius: 0, tension: .3 }] },
+    options: { animation: false, plugins: { legend: { display: false }, title: { display: true, text: label, align: "start", color: "#6b7390", font: { weight: 400 } } },
+      scales: { x: { ticks: { maxTicksLimit: 8, color: "#6b7390" }, grid: { display: false } }, y: { ticks: { color: "#6b7390" }, grid: { color: "#eef1f6" } } } } });
+}
+
+function render(d) {
+  data = d;
+  if (d.empty) { $("#error").style.display = "block"; $("#error").textContent = "최근 2시간 안에 완전히 도착한 폴링이 없습니다. 폴러와 집계 Lambda가 돌고 있는지 확인하세요."; return; }
+  $("#error").style.display = "none";
+  const age = Math.round((Date.now() - new Date(d.polled_at)) / 1000);
+  $("#polled").textContent = hhmmss(d.polled_at); $("#age").textContent = `${age}초 전`; $("#gen").textContent = hhmmss(d.generated_at);
+
+  const t = d.totals, dl = d.deltas;
+  $("#cards").innerHTML = [
+    ["대여소 수", fmt(t.stations), ""],
+    ["전체 자전거", fmt(t.bikes) + "대", delta(dl.bikes)],
+    ["0대 대여소", fmt(t.empty) + "곳", delta(dl.empty, true)],
+    ["초과 대여소", fmt(t.overflow) + "곳", delta(dl.overflow, true)],
+    ["누적 레코드 (3h)", fmt(t.records_3h), ""],
+    ["마지막 수집", hhmmss(d.polled_at), `<div class="d flat">${age}초 전</div>`],
+  ].map(([k, v, x]) => `<div class="card"><div class="k">${k}</div><div class="v">${v}</div>${x}</div>`).join("");
+
+  const c = d.changes;
+  $("#changes").innerHTML = `<div><div class="k">대여 (자전거 빠짐)</div><div class="v">${c.rentals}대</div></div>
+    <div><div class="k">반납 (자전거 들어옴)</div><div class="v">${c.returns}대</div></div>
+    <div><div class="k">상태가 바뀐 대여소</div><div class="v">${fmt(c.changed)} / ${fmt(t.stations)}곳</div></div>`;
+  $("#feedcap").textContent = d.prev_polled_at ? `${hhmmss(d.prev_polled_at)} → ${hhmmss(d.polled_at)} · 변화가 큰 대여소 10곳 · 음수 = 대여, 양수 = 반납` : "직전 폴링 없음";
+  $("#feed").innerHTML = d.feed.map(f => `<tr><td>${f.name}</td><td class="num">${f.prev}</td><td class="num">${f.now}</td><td class="num ${f.delta > 0 ? "up" : "down"}">${f.delta > 0 ? "+" : ""}${f.delta}</td></tr>`).join("");
+
+  const labels = d.trend.map(x => hhmm(x.t));
+  try {
+    lineChart("#c_bikes", labels, d.trend.map(x => x.bikes), "전체 자전거", "#1a5f7a");
+    lineChart("#c_empty", labels, d.trend.map(x => x.empty), "0대 대여소", "#dc3c3c");
+  } catch (e) { console.warn("chart", e); }
+
+  const f = d.focus[0];
+  if (f) {
+    $("#focus").innerHTML = `<h2>관심 대여소: ${f.name} <small>${f.id}</small></h2>
+      <div class="mini"><div><div class="k">지금 자전거</div><div class="v">${f.bikes}대 ${delta(f.delta).replace('class="d', 'style="display:inline;font-size:13px" class="')}</div></div>
+      <div><div class="k">빈 거치대</div><div class="v">${f.empty_racks}개</div></div><div><div class="k">거치대</div><div class="v">${f.racks}개</div></div></div>
+      <canvas id="c_focus"></canvas><div class="cap" style="margin-top:6px">최근 3시간 · ${f.series.length}개 포인트</div>`;
+    charts["#c_focus"] = null;
+    try { lineChart("#c_focus", f.series.map(x => hhmm(x[0])), f.series.map(x => x[1]), "자전거 수", "#1f2a5c"); } catch (e) { console.warn("chart", e); }
+  }
+
+  try { drawMap(d.stations); } catch (e) { console.warn("map", e); }
+  if (selected) showDetail(selected);
+}
+
+function drawMap(st) {
+  if (!map) {
+    map = L.map("map", { zoomControl: true }).setView(HYU, 14);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { attribution: "© OpenStreetMap, © CARTO", maxZoom: 19 }).addTo(map);
+    layer = L.layerGroup().addTo(map);
+  }
+  layer.clearLayers();
+  st.forEach(s => {
+    const changed = s.delta != null && s.delta !== 0;
+    const m = L.circleMarker([s.lat, s.lon], { radius: s.id === (data.focus[0] || {}).id ? 10 : changed ? 7 : 5,
+      fillColor: color(s.bikes), fillOpacity: .85, color: changed ? "#fff" : color(s.bikes), weight: changed ? 2 : 1 });
+    m.bindTooltip(`${s.name}<br>자전거 ${s.bikes}대 / 거치대 ${s.racks}개`);
+    m.on("click", () => { selected = s.id; showDetail(s.id); });
+    m.addTo(layer);
+  });
+}
+
+function showDetail(id) {
+  const s = data.stations.find(x => x.id === id); if (!s) return;
+  const state = s.is_empty ? "비어 있음" : s.is_overflow ? "거치대 초과" : "정상";
+  $("#detail").innerHTML = `<h3>선택한 대여소: ${s.name}</h3><div class="mini">
+    <div><div class="k">지금 자전거</div><div class="v">${s.bikes}대</div>${delta(s.delta)}</div>
+    <div><div class="k">거치대</div><div class="v">${s.racks}개</div></div>
+    <div><div class="k">빈 거치대</div><div class="v">${s.empty_racks}개</div></div>
+    <div><div class="k">상태</div><div class="v" style="font-size:18px">${state}</div></div>
+    <div><div class="k">대여소 ID</div><div class="v" style="font-size:18px">${s.id}</div></div></div>
+    <div class="cap">위도 ${s.lat.toFixed(5)}, 경도 ${s.lon.toFixed(5)}</div>`;
+}
+
+async function load() {
+  $("#refresh").disabled = true;
+  try {
+    const r = await fetch(`data.json?ts=${Date.now()}`, { cache: "no-store" });
+    if (!r.ok) throw new Error(`data.json ${r.status}`);
+    render(await r.json());
+  } catch (e) {
+    $("#error").style.display = "block"; $("#error").textContent = `데이터를 불러오지 못했습니다: ${e.message}. 집계 Lambda가 data.json을 올리고 있는지 확인하세요.`;
+  }
+  $("#refresh").disabled = false; timer = REFRESH;
+}
+
+$("#refresh").onclick = load;
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".seg button").forEach(x => x.classList.remove("on")); b.classList.add("on");
+  view = b.dataset.v; view === "hyu" ? map.setView(HYU, 14) : map.setView([37.5565, 126.978], 11);
+});
+setInterval(() => { timer--; $("#countdown").textContent = `다음 갱신까지 ${timer}초`; if (timer <= 0) load(); }, 1000);
+load();
+</script>
+</body>
+</html>
