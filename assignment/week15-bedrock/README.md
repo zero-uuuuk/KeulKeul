@@ -1,34 +1,53 @@
 # Week 15 · Amazon Bedrock 기본 기능과 Knowledge Bases 실습
 
-처음 시작할 때는 [처음부터 실습 순서](START_HERE.md)를 위에서부터 진행합니다. 개인 설정·상태 파일·실행 결과를 제외한 공통 실습 코드입니다.
+**생성 모델을 직접 호출하고, 문서를 검색한 뒤, 검색 근거를 모델에 전달하는 과정을 단계별로 확인합니다.**
 
-**모델 직접 호출, 문서 수집·검색, 검색 근거를 활용한 생성 과정을 구분해서 이해한다.** 논문 비교 서비스 개발 대신 Bedrock API와 Knowledge Bases의 동작을 확인하는 공통 실습이다.
+이 README의 사전 준비(0~5절)를 마친 뒤 Assignment 1 → 2 → 3 순서로 진행합니다. 아래 경로와 명령은 `assignment/week15-bedrock` 폴더를 기준으로 합니다.
 
-처음 참가하는 사람은 [참가자용 통합 실행 안내](NOTION_GUIDE.md)를 위에서부터 따라갑니다. 설치·계정·정책·실행 명령·확인 기준·오류 해결·정리까지 한 파일로 연결합니다.
+배포 상태: **진행자 AWS 전체 리허설 전 초안**. 코드의 로컬 검사는 완료했으며, 실제 AWS 전체 실행은 진행자가 참가자 배포 전에 확인합니다.
 
-## 진행 순서
+## 실습 한눈에 보기
 
-| 단계 | 안내 | 완료 기준 |
+| 구분 | 진행 내용 | 완료 결과 |
 |---|---|---|
-| 사전 준비 | [계정·설치·IAM](00-prerequisites.md) | 실행 계정·프로필·정책 준비 |
-| Assignment 1 | [모델 직접 호출](01-model-inference.md) | Converse 요청·응답·usage·stopReason 이해 |
-| Assignment 2 | [문서 수집과 검색](02-knowledge-base.md) | Sync 후 실제 원문·metadata·위치 확인 |
-| Assignment 3 | [문서 근거로 답변하기](03-rag.md) | 직접 호출/RAG 차이와 검색 개수 변경 관찰 |
-| 마무리 | [자원 정리](04-cleanup.md) | 실습 전용 자원 확인·정리 |
-| 제출 | [보고서 양식](templates/report.md) | API와 데이터 흐름을 자신의 말로 설명 |
+| 사전 준비 · 이 README 0~5절 | 파일 받기 → 실행 환경 → 개인 설정·IAM → AWS 로그인 | 실습 폴더와 AWS 실행 계정 준비 |
+| [Assignment 1](assignment1.md) | Converse로 모델 직접 호출, 출력 상한 비교 | 실제 요청·답변·usage·종료 사유 확인 |
+| [Assignment 2](assignment2.md) | 문서 업로드 → Knowledge Base 연결 → Sync → Retrieve | 검색 원문·메타데이터·출처 확인 |
+| [Assignment 3](assignment3.md) | 검색 원문을 생성 입력에 추가, 직접 호출과 비교 → 제출·자원 정리 | RAG 입력·답변·근거 비교, 보고서와 정리 기록 |
+| 문제 해결 · 이 README 6절 | 설치·권한·동기화·검색 문제 확인 | 오류 원인과 해결 기록 |
 
-공통 자료는 `data/lab-guide.txt`다. **실제 동아리 규정이 아닌 가상 연습 문서**이며 arXiv 다운로드나 논문 이해가 필요 없다. 문서의 고유 정보를 모델이 제공받는 과정을 관찰한다. 모델이 반드시 오답을 내도록 설계한 성능 대결이나 논문별 검색 균형 실험이 아니다.
+설치와 IAM 권한 준비는 본 실습 전에 완료합니다. 실습 시간은 진행자의 실제 리허설 결과에 따라 안내합니다.
 
-## 구성
+## 실습 구조와 AWS 서비스의 역할
 
 ```text
-Assignment 1: 질문 → Bedrock Converse → 답변·토큰·중단 사유
-Assignment 2: TXT + metadata → S3 → KB Sync → Titan 임베딩 → S3 Vectors
-              질문 → KB Retrieve → 원문·metadata·위치
-Assignment 3: 질문 → Retrieve → 앱에서 근거 정리 → Converse → 답변과 근거
+Assignment 1 · 생성 모델 직접 호출
+질문 → 실습 프로그램 → Bedrock Converse → 답변·토큰 사용량
+
+Assignment 2 · 문서 수집과 검색
+연습 TXT + metadata → 일반 S3
+                         ↓ Knowledge Base Sync
+                    청킹·Titan 임베딩 → S3 Vectors 인덱스
+질문 → Knowledge Base Retrieve → 검색 원문·metadata·출처
+
+Assignment 3 · 검색과 생성 연결
+질문 → Retrieve → 실습 프로그램이 질문과 검색 원문을 구성
+                 → Converse → 답변과 근거
 ```
 
-기준 리전은 서울, 임베딩은 Titan Text Embeddings V2 1024차원 float32, 생성은 Nova Lite APAC 추론 프로파일이다. APAC 추론은 서울 외 지원 리전에서 처리될 수 있다. 모델과 계정 접근은 실행 전에 확인한다. [공식 출처](SOURCES.md)를 참고한다.
+| 구성 요소 | 이번 실습에서 하는 일 |
+|---|---|
+| Amazon Bedrock / Converse | 선택한 생성 모델에 질문과 생성 설정을 전달하고 응답을 받음 |
+| Knowledge Bases / Sync | S3 문서를 수집하고 청킹·임베딩·검색 인덱스 반영을 관리 |
+| Knowledge Bases / Retrieve | 질문과 관련된 원문 조각과 출처를 반환 |
+| 일반 Amazon S3 | TXT 원본과 metadata 파일을 저장 |
+| Titan Text Embeddings V2 | 문서·질문의 의미를 검색용 벡터로 표현 |
+| Amazon S3 Vectors | 임베딩 벡터를 저장하고 유사도 검색에 사용 |
+| Nova Lite | 질문과 제공된 문서 텍스트를 읽고 자연어 답변을 생성 |
+| IAM | 참가자의 실행 권한과 Knowledge Base의 데이터 접근 권한을 관리 |
+| 제공된 Python 프로그램 | API 호출, 검색 원문의 생성 입력 구성, 실행 결과 저장 |
+
+이 실습의 RAG 코드는 **Retrieve와 Converse를 따로 호출**합니다. 검색한 벡터 숫자를 그대로 생성 모델에 전달하는 것이 아니라, 검색 결과에 포함된 **원문 텍스트**를 입력에 추가합니다. RetrieveAndGenerate를 사용하는 구성과 구분합니다.
 
 ## 제공 코드
 
@@ -38,17 +57,239 @@ Assignment 3: 질문 → Retrieve → 앱에서 근거 정리 → Converse → �
 - `lab/storage.py`: 전용 저장소·KB 역할 준비와 연결 검사·동기화
 - `lab/iam.py`: 계정·전용 자원에 맞춘 고객 관리형 정책 생성
 
-`init`, `plan`, `render-policies`는 AWS를 호출하지 않는다. `prepare/upload/sync`는 `--apply`를 붙일 때 실제로 변경한다. `generate/retrieve/rag`는 실행할 때 실제 유료 API를 호출한다. 웹앱과 DynamoDB, LangGraph, EC2는 필수 과제에 포함하지 않는다.
+`init`, `plan`, `render-policies`는 AWS를 호출하지 않습니다. `prepare/upload/sync`는 `--apply`를 붙일 때 실제로 변경합니다. `generate/retrieve/rag`는 실행할 때 실제 유료 API를 호출합니다.
 
-설치·IAM은 사전 과제로 분리한다. 본 실습은 60~90분을 준비 목표로 삼되 진행자가 리허설 시간으로 조정한다. 저장·임베딩·검색·생성 비용이 발생할 수 있다. 로컬 테스트와 실제 AWS 검증 범위는 [검증 기록](VALIDATION.md), 진행자 준비는 [INSTRUCTOR.md](INSTRUCTOR.md)에서 구분한다.
+`config.json`, `iam/generated`, `.local`, `outputs`, `.venv`는 참가자가 로컬에서 생성하며 Git에 포함하지 않습니다.
 
-## GitHub에서 받아 실행하기
+## 0. 실습 목표와 준비물
 
-```powershell
-git clone https://github.com/zero-uuuuk/KeulKeul.git
-cd KeulKeul/assignment/week15-bedrock
+완료 후 다음을 설명할 수 있어야 합니다.
+
+- Converse가 생성 모델을 호출할 때 어떤 입력과 설정을 사용하는가?
+- usage의 실제 토큰 수와 maxTokens의 출력 상한은 어떻게 다른가?
+- S3 원본, KB Sync, 임베딩, S3 Vectors, Retrieve는 각각 무엇을 하는가?
+- 검색한 원문이 생성 모델의 입력에 어떻게 추가되는가?
+- 문서에 없는 정보에 답하거나 문서를 업데이트할 때 무엇을 확인해야 하는가?
+
+준비물:
+
+- 개인 AWS 계정과 IAM 사용자/역할 로그인
+- 실습 권한을 준비할 관리자 또는 진행자
+- Python 3.11, AWS CLI v2.32.0 이상, 인터넷 연결
+- 이 저장소의 **assignment/week15-bedrock** 폴더 전체
+
+본 실습은 **서울 ap-northeast-2** 기준입니다. 임베딩은 Titan Text Embeddings V2의 1024차원 float32, 생성은 Nova Lite APAC 추론 프로파일을 사용합니다. APAC 추론은 서울 외 지원 리전에서 처리될 수 있습니다. 모델·임베딩·저장·검색 비용이 발생할 수 있습니다. 예산 알림은 자동 지출 차단 기능이 아닙니다.
+
+공통 문서는 **가상 운영 안내 TXT**입니다. 실제 동아리의 일정이나 규정이 아닙니다. GPU·CUDA·Docker와 웹앱 구축은 필수 범위에 포함하지 않습니다.
+
+## 1. 파일을 받고 실행 폴더 열기
+
+저장소를 clone하거나 **Code → Download ZIP**으로 내려받아 압축을 풉니다. `KeulKeul/assignment/week15-bedrock` 폴더를 엽니다. ZIP으로 받았다면 최상위 폴더 이름은 `KeulKeul-main`일 수 있습니다. ZIP 안에서 바로 실행하지 않습니다.
+
+다음 파일이 보이는 폴더가 실행 위치입니다.
+
+```text
+week15-bedrock/
+├── README.md
+├── assignment1.md
+├── assignment2.md
+├── assignment3.md
+├── setup.ps1
+├── setup.sh
+├── requirements.txt
+├── config.example.json
+├── lab/
+│   ├── cli.py
+│   ├── lesson.py
+│   ├── documents.py
+│   ├── storage.py
+│   └── iam.py
+├── data/
+│   ├── lab-guide.txt
+│   └── lab-guide.txt.metadata.json
+└── tests/
+    └── test_lesson.py
 ```
 
-Git이 없다면 저장소의 **Code → Download ZIP**을 선택해 압축을 풀고 `assignment/week15-bedrock` 폴더를 엽니다. 이 폴더에서 [START_HERE.md](START_HERE.md)의 설치와 개인 설정 생성부터 진행합니다. `python -m lab.cli`는 이 폴더의 `lab/cli.py`를 실행하는 명령입니다.
+Windows에서는 이 폴더의 빈 공간을 우클릭해 터미널을 열고 PowerShell을 사용합니다. 터미널이 다른 폴더에서 열렸다면 먼저 압축을 푼 실제 경로로 이동합니다.
 
-`config.json`, `iam/generated`, `.local`, `outputs`, `.venv`는 참가자가 로컬에서 생성하며 Git에 포함하지 않습니다. 생성된 IAM 정책은 관리자가 AWS에서 생성·연결해야 적용됩니다.
+```powershell
+Get-Location
+Get-ChildItem
+```
+
+**확인:** 현재 목록에 setup.ps1, requirements.txt, lab 폴더가 보여야 합니다. 이후 명령은 별도 안내가 없으면 이 위치에서 실행합니다.
+
+## 2. Python 실행 환경 설치
+
+### Windows PowerShell
+
+```powershell
+py -3.11 --version
+aws --version
+powershell -NoProfile -ExecutionPolicy Bypass -File .\setup.ps1
+$env:Path = (Join-Path (Get-Location) ".venv\Scripts") + ";" + $env:Path
+python -c "import sys; print(sys.executable)"
+python -m pip check
+```
+
+**확인:** Python 경로가 현재 실습 폴더의 .venv\Scripts\python.exe여야 합니다. pip check에 의존성 충돌이 없어야 합니다. PATH 변경은 현재 창에만 적용됩니다. 새 창을 열면 폴더 이동과 PATH 설정을 다시 하거나 .\.venv\Scripts\python.exe를 직접 사용합니다. 전역 실행 정책을 바꾸지 않습니다.
+
+### Mac
+
+Python 3.11 이상이 준비된 상태에서 실습 폴더를 터미널로 엽니다.
+
+```bash
+python3 --version
+aws --version
+bash setup.sh
+source .venv/bin/activate
+python -c "import sys; print(sys.executable)"
+python -m pip check
+```
+
+이후 python -m lab.cli 명령은 두 운영체제에서 동일합니다. 제작자 로컬 확인 환경은 Windows Python 3.11이며 Mac 실제 설치·실행은 별도 확인이 필요합니다.
+
+Python이나 AWS CLI가 없으면 공식 설치 안내를 먼저 따릅니다.
+
+- [Python 다운로드](https://www.python.org/downloads/)
+- [AWS CLI 설치](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+
+## 3. 개인 설정과 정책 파일 만들기
+
+AWS 콘솔에서 본인의 12자리 계정 ID를 확인합니다. 아래 계정 ID는 예시이므로 **본인 값으로 바꾸고** 실행합니다. suffix는 영문 소문자·숫자·하이픈 2~12자입니다. 같은 계정에서 여러 명이 실습하면 서로 다른 suffix를 사용합니다.
+
+```text
+python -m lab.cli init --account 123456789012 --suffix student01 --profile keulkeul-bedrock
+```
+
+**확인:** config.json과 iam/generated 폴더가 만들어집니다. 이 명령은 로컬 파일만 생성합니다. AWS에 정책이나 자원이 만들어진 것은 아닙니다.
+
+주요 설정:
+
+| 항목 | 내용 |
+|---|---|
+| account_id | 자신의 AWS 계정 ID |
+| region | ap-northeast-2 |
+| profile | keulkeul-bedrock |
+| suffix | 본인 실습 자원을 구분하는 값 |
+| model_id | apac.amazon.nova-lite-v1:0 |
+| knowledge_base_id / data_source_id | 이 단계에서는 빈 값. KB 생성 후 입력 |
+
+config.json이 이미 있으면 init은 덮어쓰지 않습니다. 다른 실습의 개인 설정과 .local 상태 파일을 가져오지 않습니다. 버킷·역할 이름을 임의의 공유 자원으로 바꾸지 않습니다.
+
+## 4. 관리자 또는 진행자: IAM 정책 생성·연결
+
+참가자에게 IAM 관리 권한이 있다고 가정하지 않습니다. 이 단계는 권한을 관리할 수 있는 사람이 수행합니다.
+
+| 생성된 파일 | 적용 대상 |
+|---|---|
+| 01-storage-setup.json | 실습 실행 주체의 고객 관리형 정책 |
+| 02-role-setup.json | 실습 실행 주체의 고객 관리형 정책 |
+| 03-kb-setup.json | 실습 실행 주체의 고객 관리형 정책 |
+| 04-app-runtime.json | 실습 실행 주체의 고객 관리형 정책 |
+| kb-service-trust.json | KB 서비스 역할의 신뢰 정책 |
+| kb-service-access.json | KB 서비스 역할의 데이터 접근 정책 |
+
+1. IAM → 정책 → 정책 생성 → JSON을 엽니다.
+2. 01-storage-setup.json 내용으로 고객 관리형 정책을 만듭니다. 예시 이름은 KeulkeulBedrock-student01-Storage입니다.
+3. 같은 방식으로 02, 03, 04를 각각 RoleSetup, KBSetup, Runtime 정책으로 만듭니다.
+4. IAM → 사용자 → 실습 사용자 → 권한 추가 → 정책 직접 연결에서 네 정책을 연결합니다. 역할이나 SSO를 쓰는 환경은 관리자가 해당 실행 역할·permission set에 적용합니다.
+5. 콘솔 사용자 자격으로 aws login을 사용한다면 AWS 관리형 SignInLocalDevelopmentAccess도 허용되어 있어야 합니다.
+
+**네 JSON을 사용자 인라인 정책 편집기에 합쳐 넣지 않습니다.** 사용자 인라인 정책은 합계 2,048자, 고객 관리형 정책은 정책당 6,144자 한도가 있습니다. kb-service-* 두 파일은 사용자에게 연결하지 않습니다. 뒤의 prepare 도구가 서비스 역할을 준비할 때 사용합니다.
+
+02는 역할의 권한 정책을 작성하는 관리 성격의 준비 권한입니다. 개인 실습 계정 기준이며, 공유·운영 계정에서는 관리자가 역할을 미리 준비하는 방식으로 조정합니다. 조직 SCP·권한 경계·콘솔의 추가 조회 권한 요구는 진행자가 확인합니다.
+
+**확인:** 정책 파일이 PC에만 있는 상태와 IAM에 생성·연결된 상태를 구분합니다. 직접 정책 연결 목록에 정책이 없다면 정책 생성 여부, 고객 관리형 필터, 계정, 검색어를 확인합니다.
+
+### 4-1. 처음 실습하는 경우
+
+최신 저장소 코드을 사용해 개인 설정과 정책 파일을 생성하고, 위 순서대로 네 고객 관리형 정책을 생성·연결합니다. 수정된 정책에는 CreateIndex 권한이 실습용 인덱스 ARN에 포함되어 있으므로 아래의 이전 정책 교체 과정은 필요하지 않습니다.
+
+정책 JSON 파일은 실습 폴더의 **iam/generated**에 있습니다. Windows에서는 다음 명령으로 폴더와 첫 번째 정책 파일을 열 수 있습니다.
+
+```powershell
+explorer .\iam\generated
+notepad .\iam\generated\01-storage-setup.json
+```
+
+메모장에서 파일 내용 전체를 복사해 IAM 정책 생성 화면의 JSON 편집기에 붙여 넣습니다. 파일 이름이나 경로를 붙여 넣는 것이 아닙니다. Mac에서는 같은 경로의 파일을 편집기로 엽니다.
+
+### 4-2. 이전 정책을 이미 생성한 경우: Storage 정책 수정
+
+이전 배포본의 01-storage-setup.json은 CreateIndex 권한의 대상을 벡터 버킷 ARN으로 지정한 오류가 있었습니다. CreateIndex는 **`/index/documents`로 끝나는 인덱스 ARN**에 허용해야 합니다. 수정된 파일을 사용해 AWS에 연결된 정책도 업데이트합니다.
+
+1. **본인 계정·suffix로 생성한 수정본** 01-storage-setup.json을 엽니다. 다른 사람의 계정 ID가 들어 있는 JSON을 복사하지 않습니다.
+2. IAM 권한을 관리할 수 있는 계정으로 AWS 콘솔에 로그인합니다.
+3. **IAM → 사용자 → 실습 사용자 → 권한**에서 이번 실습의 Storage 고객 관리형 정책을 엽니다. 이름 예시는 KeulkeulBedrock-student01-Storage입니다.
+4. **정책 편집 → JSON**에서 기존 내용을 수정된 파일의 전체 내용으로 교체하고 저장합니다.
+5. 새 정책 버전이 **기본 버전**인지, 정책이 실제 실습 사용자에게 연결되어 있는지 확인합니다. 역할이나 SSO 환경은 관리자가 해당 실행 주체에 연결된 정책을 수정합니다.
+
+수정 확인: CreateIndex가 GetIndex·DeleteIndex와 함께 실습용 **인덱스 ARN**에 허용되어 있어야 합니다. IAM 변경 반영에는 시간이 걸릴 수 있습니다. 로컬 JSON 파일만 고쳐서는 AWS 정책이 갱신되지 않습니다.
+
+**이 단계에서 KB 서비스 역할이 아직 없어도 됩니다.** 네 정책은 실습 실행 주체의 준비 권한이며, KeulkeulBedrockKB-본인suffix 역할은 Assignment 2의 prepare 명령이 나중에 생성합니다.
+
+## 5. AWS 로그인과 계정 확인
+
+```text
+aws login --profile keulkeul-bedrock
+```
+
+리전을 묻는다면 ap-northeast-2를 선택합니다. 브라우저에서 실습 IAM 사용자/역할로 로그인하고 로컬 개발 접근을 승인합니다. 일반 콘솔 로그인만 완료한 것으로 끝내지 않습니다.
+
+```text
+aws sts get-caller-identity --profile keulkeul-bedrock
+```
+
+**확인:** Account가 config.json의 account_id와 같아야 합니다. Arn이 :root로 끝나면 IAM 사용자/역할로 다시 로그인합니다. 실습 코드는 루트 신원을 차단합니다.
+
+IAM Identity Center 환경은 관리자의 SSO 설정에 따라 아래 경로를 사용합니다.
+
+```text
+aws configure sso --profile keulkeul-bedrock
+aws sso login --profile keulkeul-bedrock
+```
+
+로그인 토큰·액세스 키를 코드나 Notion에 붙여 넣지 않습니다. STS 출력의 개인 계정 식별 정보도 공개 제출 화면에 그대로 넣지 않습니다. 로그인 만료 시 해당 로그인 명령을 다시 실행합니다.
+
+진행자는 서울 리전의 생성 모델·추론 프로파일·임베딩·S3 Vectors 접근을 미리 확인합니다. 모델을 바꾼다면 model_id뿐 아니라 lab/iam.py의 모델·프로파일 ARN 정책도 함께 바꾸고 재생성·적용해야 합니다.
+
+## 6. 막혔을 때 확인할 것
+
+| 증상 | 확인·조치 |
+|---|---|
+| No module named lab | 현재 폴더에 lab과 setup.ps1이 있는지 확인 |
+| boto3 모듈을 찾지 못함 | 가상환경 Python 경로와 setup 설치 결과 확인 |
+| aws 명령이 없음 / login을 모름 | AWS CLI 설치 후 새 터미널, 버전 2.32.0 이상 확인 |
+| 로그인 만료 | aws login 또는 해당 SSO 로그인 재실행 |
+| 계정 불일치·root 차단 | STS와 config의 계정·IAM 신원 확인 |
+| 직접 정책 연결에 정책이 안 보임 | 관리자가 해당 계정에 고객 관리형 정책을 생성했는지, 필터·검색어 확인 |
+| JSON 길이 한도 | 고객 관리형 정책 4개를 각각 생성했는지 확인. 인라인에 합치지 않음 |
+| AccessDenied | 오류의 작업·자원·실행 주체를 확인해 관리자에게 전달. 임의로 전체 관리자 권한을 붙이지 않음 |
+| CreateIndex에서 권한 없음 | 수정된 01 정책에서 CreateIndex가 인덱스 ARN에 허용되는지, AWS의 기본 정책 버전과 실습 사용자 연결 상태 확인 |
+| 모델·프로파일 호출 오류 | 리전·model_id·모델 접근·프로파일과 대상 리전 권한 확인 |
+| 자원 이름이 이미 존재함 | 기존 자원을 인수하지 말고 진행자와 확인. 새 실습은 새 폴더·새 suffix 사용 |
+| KB 연결 검사 실패 | 실제 ID, 역할, docs/ 경로, Titan 모델과 1024차원, documents 인덱스 확인 |
+| 검색 결과 없음·doc_id 오류 | 원본 두 객체, metadata 파일명·doc_id, 데이터 소스 경로, Sync 실패 수 확인 |
+| 이전 코드가 검색됨 | 로컬 수정만 하지 않았는지, 재업로드·Sync·검색 반영 상태 확인 |
+| 답변은 나왔는데 틀림 | 필요한 원문이 검색됐는지 확인한 뒤 답변의 주장과 대조 |
+
+오류를 공유할 때는 질문·실행 단계·오류 코드와 필요한 설정 이름만 전달합니다. 액세스 키나 로그인 토큰은 보내지 않습니다.
+
+## 7. 검증 범위와 공식 참고
+
+제작 시 Windows Python 3.11에서 AWS 호출 없는 로컬 테스트 18개와 가짜 클라이언트 기반 CLI 결과 저장을 확인했습니다. CreateIndex 권한의 인덱스 ARN 범위를 검사하는 테스트를 포함합니다. 실제 AWS 로그인·권한 적용·자원 생성·수집·검색·모델 호출·삭제, 응답 품질·시간·비용은 진행자가 리허설로 확인해야 합니다. Mac 실제 실행도 별도 확인 대상입니다.
+
+정확한 토큰 수·응답 문장·검색 조각 수·비용·시간을 미리 정답처럼 제공하지 않습니다. 콘솔 UI가 바뀌면 공식 문서와 리허설 기록을 기준으로 안내를 갱신합니다.
+
+- [AWS CLI 브라우저 로그인](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sign-in.html)
+- [Converse API](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html)
+- [벡터 저장소 연결형 KB 생성](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-create.html)
+- [S3 데이터 소스](https://docs.aws.amazon.com/bedrock/latest/userguide/s3-data-source-connector.html)
+- [검색 설정](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-test-config.html)
+- [KB 서비스 역할](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html)
+- [Nova Lite와 지원 리전](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-amazon-nova-lite.html)
+- [IAM 정책 한도](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_iam-quotas.html)
+- [S3 Vectors 작업별 권한·자원 범위](https://docs.aws.amazon.com/service-authorization/latest/reference/list_s3vectors.html)
+- [Bedrock 요금](https://aws.amazon.com/bedrock/pricing/), [S3 요금](https://aws.amazon.com/s3/pricing/)

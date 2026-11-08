@@ -1,8 +1,6 @@
-# Assignment 2 · 문서 수집과 원문 검색하기
+# Assignment 2 · 문서 수집과 원문 검색
 
-**시작 조건:** 사전 준비와 Assignment 1을 완료한 뒤 시작합니다. 이전과 같은 실행 폴더·가상환경·AWS 프로필·config.json을 사용합니다.
-
-모든 명령은 이 저장소의 `assignment/week15-bedrock` 폴더에서 실행합니다. 결과값은 예측해서 쓰지 않고 본인의 실제 실행으로 기록합니다.
+[← Assignment 1](assignment1.md) · [Assignment 3 →](assignment3.md)
 
 **목표:** 원본 저장, 문서 인덱싱, 원문 검색을 구분합니다. 생성 답변을 만들기 전에 검색된 자료부터 확인합니다.
 
@@ -68,7 +66,7 @@ python -m lab.cli prepare --apply
 
 오류에 **AccessDeniedException / s3vectors:CreateIndex / no identity-based policy allows**가 표시되면 인덱스 생성 권한을 확인합니다. 이 단계에서 중단되면 그 뒤에 생성하는 KB 서비스 역할도 아직 없을 수 있습니다.
 
-1. **사전 준비 → 4-2. 이전 정책을 이미 생성한 경우**에 따라 수정된 01-storage-setup.json으로 AWS의 Storage 고객 관리형 정책을 업데이트합니다.
+1. [README](README.md)의 **4-2. 이전 정책을 이미 생성한 경우**에 따라 수정된 01-storage-setup.json으로 AWS의 Storage 고객 관리형 정책을 업데이트합니다.
 2. 정책의 기본 버전, 실습 사용자 연결 상태, 대상 인덱스 ARN이 본인의 실습 자원과 일치하는지 확인합니다.
 3. 권한을 수정한 뒤 **같은 폴더·계정·suffix**로 아래 명령을 다시 실행합니다.
 
@@ -152,19 +150,3 @@ python -m lab.cli retrieve "CloudShelf 보고서 제출 마감과 제출 폴더�
 2. S3에 파일을 올린 뒤 Sync가 필요한 이유는 무엇인가요?
 3. 임베딩 모델과 생성 모델의 역할은 어떻게 다른가요?
 4. 검색 결과가 반환됐다는 사실만으로 질문의 정답 근거를 찾았다고 할 수 있나요?
-
-
-## 제출 기록 양식
-
-- Sync 완료 상태와 실패 문서 수:
-- 질문:
-- 검색된 원문 중 질문에 필요한 부분:
-- 검색 결과의 doc_id:
-- 출처 위치와 원본 문서 대조 결과:
-- S3 원본 저장 → Sync → 청킹·임베딩 → S3 Vectors → Retrieve의 역할 설명:
-
-실제 검색 결과를 사용하고, 공개 제출 화면에서는 개인 계정 식별 정보를 가립니다.
-
-
-다음: [Assignment 3](03-rag.md)
-
