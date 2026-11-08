@@ -1,4 +1,4 @@
-# Week 17 · Amazon Bedrock 기본 기능과 Knowledge Bases 실습
+# Week 15 · Amazon Bedrock 기본 기능과 Knowledge Bases 실습
 
 처음 시작할 때는 [처음부터 실습 순서](START_HERE.md)를 위에서부터 진행합니다. 개인 설정·상태 파일·실행 결과를 제외한 공통 실습 코드입니다.
 
@@ -46,9 +46,9 @@ Assignment 3: 질문 → Retrieve → 앱에서 근거 정리 → Converse → �
 
 ```powershell
 git clone https://github.com/zero-uuuuk/KeulKeul.git
-cd KeulKeul/assignment/week17-bedrock
+cd KeulKeul/assignment/week15-bedrock
 ```
 
-Git이 없다면 저장소의 **Code → Download ZIP**을 선택해 압축을 풀고 `assignment/week17-bedrock` 폴더를 엽니다. 이 폴더에서 [START_HERE.md](START_HERE.md)의 설치와 개인 설정 생성부터 진행합니다. `python -m lab.cli`는 이 폴더의 `lab/cli.py`를 실행하는 명령입니다.
+Git이 없다면 저장소의 **Code → Download ZIP**을 선택해 압축을 풀고 `assignment/week15-bedrock` 폴더를 엽니다. 이 폴더에서 [START_HERE.md](START_HERE.md)의 설치와 개인 설정 생성부터 진행합니다. `python -m lab.cli`는 이 폴더의 `lab/cli.py`를 실행하는 명령입니다.
 
 `config.json`, `iam/generated`, `.local`, `outputs`, `.venv`는 참가자가 로컬에서 생성하며 Git에 포함하지 않습니다. 생성된 IAM 정책은 관리자가 AWS에서 생성·연결해야 적용됩니다.

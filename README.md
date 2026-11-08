@@ -62,8 +62,10 @@ assignment
 │   └── Minikube, Pod·Service, 부하분산·자가복구·롤백
 ├── week14-ec2-vlm-finetuning
 │   └── GPU Quota 준비, EC2 GPU에서 VLM LoRA 미세조정
-└── week17-bedrock
-    └── Bedrock 모델 호출, Knowledge Bases 문서 검색, RAG 비교
+├── week15-bedrock
+│   └── Bedrock 모델 호출, Knowledge Bases 문서 검색, RAG 비교
+└── week16-firehose
+    └── Firehose·Lambda 변환으로 따릉이 데이터 적재, Athena 대시보드
 ```
 
 ---
@@ -78,6 +80,8 @@ assignment
 | 지문호 | [@mloolhz](https://github.com/mloolhz) |
 | 임수하 | [@imnshxa](https://github.com/imnshxa) |
 | 하지찬 | [@yttco99](https://github.com/yttco99) |
+| 김성윤 | [@ksy2822](https://github.com/ksy2822) |
+| 이주현 | [@j3695h](https://github.com/j3695h) |
 
 ---
 

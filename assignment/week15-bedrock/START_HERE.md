@@ -2,13 +2,13 @@
 
 실습 흐름은 **사전 준비 → Assignment 1 모델 호출 → Assignment 2 문서 수집·검색 → Assignment 3 RAG 비교 → 제출·정리**입니다.
 
-실행 파일은 이 저장소의 `assignment/week17-bedrock` 폴더에 있습니다. 저장소를 clone하거나 **Code → Download ZIP**으로 내려받아 압축을 푼 뒤 이 폴더를 사용합니다. 모든 명령은 해당 폴더에서 실행합니다. 코드 블록의 명령만 복사하며, 앞뒤의 백틱 표시나 PowerShell의 `PS ...>` 프롬프트는 입력하지 않습니다.
+실행 파일은 이 저장소의 `assignment/week15-bedrock` 폴더에 있습니다. 저장소를 clone하거나 **Code → Download ZIP**으로 내려받아 압축을 푼 뒤 이 폴더를 사용합니다. 모든 명령은 해당 폴더에서 실행합니다. 코드 블록의 명령만 복사하며, 앞뒤의 백틱 표시나 PowerShell의 `PS ...>` 프롬프트는 입력하지 않습니다.
 
 ## 사전 준비
 
 ### 1. 새 실습 폴더 열기
 
-저장소를 받은 뒤 `assignment/week17-bedrock`으로 이동합니다. `setup.ps1`, `requirements.txt`, `lab`, `data`가 함께 들어 있는 폴더에서 PowerShell을 엽니다. 예를 들어 문서 폴더에 압축을 풀었다면 실제 폴더 경로로 먼저 이동합니다.
+저장소를 받은 뒤 `assignment/week15-bedrock`으로 이동합니다. `setup.ps1`, `requirements.txt`, `lab`, `data`가 함께 들어 있는 폴더에서 PowerShell을 엽니다. 예를 들어 문서 폴더에 압축을 풀었다면 실제 폴더 경로로 먼저 이동합니다.
 
 ```powershell
 Get-Location
